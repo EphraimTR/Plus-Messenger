@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
+import org.telegram.ui.ActionBar.Theme;
+
 import java.io.File;
 
 public class ModuleContentProvider extends ContentProvider {
@@ -20,13 +22,6 @@ public class ModuleContentProvider extends ContentProvider {
     public static Uri THEME_URI = Uri.parse("content://" + AUTHORITY + "/theme");
     public static Uri GET_NAME = Uri.parse("content://" + AUTHORITY + "/name");
     public static Uri SET_NAME = Uri.parse("content://" + AUTHORITY + "/newname");
-
-    /*private static final UriMatcher sUriMatcher;
-    static {
-        sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        sUriMatcher.addURI(AUTHORITY, "theme", 1);
-        sUriMatcher.addURI(AUTHORITY, "name", 2);
-    }*/
 
     @Override
     public boolean onCreate() {
@@ -81,8 +76,15 @@ public class ModuleContentProvider extends ContentProvider {
             if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
                 File themeFile = new File(theme);
                 if(themeFile.exists()){
-                    applyTheme(theme);
-                    return 10;
+                    if(themeFile.getAbsolutePath().contains(".attheme")){
+                        Theme.setUsePlusThemeKey(false);
+                        //Log.d(TAG, themeFile.getName());
+                        Theme.applyThemeFile(themeFile, themeFile.getName(), false);
+                        return 11;
+                    } else {
+                        applyTheme(theme);
+                        return 10;
+                    }
                 }
                 return 20;//theme doesn't exists
             }
@@ -94,7 +96,7 @@ public class ModuleContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String where, String[] selectionArgs) {
-        //Log.d(TAG, "delete uri: " + uri.toString());
+        Log.d(TAG, "delete uri: " + uri.toString());
         throw new UnsupportedOperationException();
     }
 
@@ -120,6 +122,13 @@ public class ModuleContentProvider extends ContentProvider {
             //Utilities.loadWallpaperFromSDPath(ApplicationLoader.applicationContext, wName);
             Utilities.applyWallpaper(wName);
             AndroidUtilities.needRestart = true;
+            Theme.setUsePlusThemeKey(true);
+                /*Theme.usePlusTheme = true;
+                SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+                SharedPreferences.Editor editor = themePrefs.edit();
+                editor.putBoolean("usePlusTheme", true);
+                editor.apply();*/
+
         }
     }
 }

@@ -82,8 +82,6 @@
   <string name="NoBlockedGroup">被屏蔽用户将被移除群组，且只有管理员能解除屏蔽。普通邀请链接对他们无效。</string>
   <string name="NewChannel">新建频道</string>
   <string name="EnterChannelName">频道名称</string>
-  <string name="Comments">评论</string>
-  <string name="CommentsInfo">如果启用了评论功能，其他人将能在这个频道中评论您发布的文章。</string>
   <string name="AddMutual">添加联系人到您的频道</string>
   <string name="ChannelUsernameHelp">其他人将可以转发这个链接或通过 Telegram 搜索功能找到您的频道。</string>
   <string name="ChannelUsernamePlaceholder">链接</string>
@@ -101,10 +99,7 @@
   <string name="LeaveChannelMenu">离开频道</string>
   <string name="ChannelSettings">设置</string>
   <string name="ChannelJoin">加入</string>
-  <string name="OpenChannelProfile">频道信息</string>
   <string name="ChannelBroadcast">广播</string>
-  <string name="ChannelComment">评论</string>
-  <string name="ShowDiscussion">显示评论</string>
   <string name="ChannelAlertTitle">频道是什么？</string>
   <string name="ChannelAlertText">频道是一个向大众传播信息的新工具。</string>
   <string name="ChannelAlertCreate">创建频道</string>
@@ -130,8 +125,6 @@
   <string name="ActionChannelChangedPhoto">已更换频道照片</string>
   <string name="ActionChannelRemovedPhoto">已移除频道照片</string>
   <string name="ActionChannelChangedTitle">频道名称变更为 un2</string>
-  <string name="ChannelPublicLimitReached">对不起，您已建立过多的公众频道。您可以先删除一个公众频道或是直接创建私有频道。</string>
-  <string name="ChannelModerator">主持人</string>
   <string name="ChannelCreator">创始人</string>
   <string name="ChannelEditor">管理人</string>
   <string name="ChannelMute">关闭频道通知</string>
@@ -387,15 +380,13 @@
   <string name="UsernameEmpty">无</string>
         <string name="ErrorOccurred">发生错误。</string>
   <!--stickers view-->
-  <string name="Stickers">图贴</string>
-  <string name="StickersInfo">欢迎艺术家使用 @stickers 机器号加入自己设计的图贴集。\n\n其他使用者可以通过长按选择“添加到图贴”的方式来加入图贴。</string>
+  <string name="StickersName">图贴</string>
   <string name="AddStickers">添加图贴</string>
   <string name="AddToStickers">添加到图贴集</string>
   <string name="AddStickersNotFound">未找到图贴</string>
   <string name="StickersRemoved">图贴已删除</string>
   <string name="AddStickersInstalled">新图贴已添加</string>
   <string name="StickersHide">隐藏</string>
-  <string name="StickersShow">显示</string>
   <string name="StickersShare">分享</string>
   <string name="StickersCopy">复制链接</string>
   <string name="StickersRemove">移除</string>
@@ -444,7 +435,6 @@
   <string name="Enabled">已启用</string>
   <string name="Disabled">已禁用</string>
         <string name="NotificationsService">通知服务</string>
-  <string name="NotificationsServiceDisableInfo">如果您能收到 Google Play 服务发送的通知，您可以禁用 Telegram 的通知服务。但是我们仍然建议您保留该应用在后台运行以接收即时消息。</string>
   <string name="SortBy">排序</string>
   <string name="ImportContacts">导入联系人</string>
   <string name="SortFirstName">名字</string>
@@ -458,8 +448,7 @@
   <string name="BadgeNumber">未读数量提示</string>
         <string name="Short">短</string>
         <string name="Long">长</string>
-        <string name="SystemDefault">系统默认</string>
-  <string name="SettingsDefault">默认设置</string>
+
   <string name="AutomaticMediaDownload">自动下载多媒体</string>
   <string name="WhenUsingMobileData">使用移动数据流量时</string>
   <string name="WhenConnectedOnWiFi">接入 WiFi 时</string>
@@ -491,12 +480,9 @@
   <string name="SmartNotifications">智能通知</string>
   <string name="SmartNotificationsDisabled">禁用智能通知</string>
   <string name="SmartNotificationsInfo">在 %2$s 分钟内，至少通知 %1$s 次</string>
-  <string name="SmartNotificationsSoundAtMost">至少通知</string>
-  <string name="SmartNotificationsTimes">次</string>
-  <string name="SmartNotificationsWithin">时间范围</string>
-  <string name="SmartNotificationsMinutes">分钟</string>
+
   <!--cache view-->
-  <string name="CacheSettings">缓存设置</string>
+
   <string name="LocalDatabase">本地数据</string>
   <string name="LocalDatabaseClear">清除缓存到本地的文本消息？</string>
   <string name="LocalDatabaseInfo">清除本地数据会删除所有缓存到本地的文本型消息，并压缩本地数据库节省存储空间。Telegram 保持工作需要一些数据，所以数据库空间不会置零。\n\n完成这个操作需要几分钟时间。</string>
@@ -571,7 +557,6 @@
   <string name="Of">第 %1$d 张，共 %2$d 张</string>
         <string name="Gallery">相册</string>
   <string name="AllPhotos">全部图片</string>
-  <string name="AllVideo">全部视频</string>
   <string name="NoPhotos">还没有图片</string>
   <string name="NoVideo">还没有视频</string>
   <string name="PleaseDownload">请先下载媒体文件</string>
@@ -692,10 +677,7 @@
 <string name="RemoveFromListText">长按用户以删除。</string>
     <!--edit video view-->
 <string name="EditVideo">编辑视频</string>
-<string name="OriginalVideo">原始视频</string>
-<string name="EditedVideo">编辑过的视频</string>
   <string name="SendingVideo">正在发送视频……</string>
-<string name="CompressVideo">压缩视频</string>
   <!--bot-->
   <string name="Bot">机器号</string>
   <string name="BotShare">分享</string>
@@ -817,22 +799,20 @@
 <string name="Page4Title">安全</string>
 <string name="Page5Title">强大</string>
   <string name="Page6Title">基于云端</string>
-  <string name="Page7Title">私密</string>
   <string name="Page1Message">世界上<![CDATA[<b>最快</b>]]>的聊天软件。<![CDATA[<br/><b>免费</b>]]>并且<![CDATA[<b>安全</b>]]>。</string>
   <string name="Page2Message"><![CDATA[<b>Plus Messenger</b>]]> 收发信息<![CDATA[<br/>]]>快过任何其它软件。</string>
   <string name="Page3Message"><![CDATA[<b>Plus Messenger</b>]]> 永久免费。无广告。<![CDATA[<br/>]]>无须月费年费。</string>
   <string name="Page4Message"><![CDATA[<b>Plus Messenger</b>]]> 保障您的消息安全<![CDATA[<br/>]]>远离黑客攻击。</string>
   <string name="Page5Message"><![CDATA[ <b>Plus Messenger</b> ]]>对消息与多媒体<![CDATA[ <br/> ]]>没有任何大小限制。</string>
   <string name="Page6Message"><![CDATA[ <b>Plus Messenger</b> ]]>让您可以从多个设备中<![CDATA[ <br/> ]]>收发您的消息。</string>
-  <string name="Page7Message"><![CDATA[ <b>Plus Messenger</b> ]]>私密的信息经过高强度加密<![CDATA[ <br/> ]]>并且支持阅后即焚。</string>
   <string name="StartMessaging">开始聊天</string>
     <!--plural-->
-  <string name="Online_zero">无人在线</string>
-  <string name="Online_one">一人在线</string>
-  <string name="Online_two">两人在线</string>
-  <string name="Online_few">%1$d 人在线</string>
-  <string name="Online_many">%1$d 人在线</string>
-  <string name="Online_other">%1$d 人在线</string>
+  <string name="OnlineCount_zero">无人在线</string>
+  <string name="OnlineCount_one">一人在线</string>
+  <string name="OnlineCount_two">两人在线</string>
+  <string name="OnlineCount_few">%1$d 人在线</string>
+  <string name="OnlineCount_many">%1$d 人在线</string>
+  <string name="OnlineCount_other">%1$d 人在线</string>
   <string name="Members_zero">没有成员</string>
   <string name="Members_one">一位成员</string>
   <string name="Members_two">两位成员</string>
@@ -857,12 +837,6 @@
 <string name="messages_few">%1$d 条消息</string>
 <string name="messages_many">%1$d 条消息</string>
 <string name="messages_other">%1$d 条消息</string>
-  <string name="comments_zero">没有评论</string>
-  <string name="comments_one">一条评论</string>
-  <string name="comments_two">两条评论</string>
-  <string name="comments_few">%1$d 条评论</string>
-  <string name="comments_many">%1$d 条评论</string>
-  <string name="comments_other">%1$d 条评论</string>
   <string name="items_zero">没有选中项目</string>
   <string name="items_one">选中一个项目</string>
   <string name="items_two">选中两个项目</string>
@@ -1025,11 +999,15 @@
   <string name="formatterDay24H">HH:mm</string>
   <string name="formatterDay12H">h:mm a</string>
   <string name="formatDateAtTime">%1$s 的 %2$s</string>
-  <!--update text--><!--
-  <string name="updateText">Android 版的 Plus Messenger 已更新。最新版本 3.1 的新增功能有：\n\n- 在特定聊天中搜索消息内容。\n- 全新设计的附件选择菜单。从附件选择菜单中直接发送联系人资料或语音文件。\n- 改进的程序内媒体播放功能 （YouTube, Vimoe, Soundcloud 等）, 新播放器适用于大型语音文件。\n\n更多更新请查看：\nhttps://telegram.org/blog/search-and-media</string>
-  <string name="updateBuild">736</string>-->
-  <!--Telegram+--><!--
-  <string name="updatePlusText">\n\n在 3.4.2.5 版的新功能：\n\n- 错误修复</string>-->
+  <!--Plus-->
+  <string name="updatePlusText">4.2.1.1 版的新功能
+\n\n- 发送自毁照片和视频到任何一对一的聊天 ( 按媒体选择器中的时钟图标设置一个计时器 ) 。
+\n- 使用改善的照片编辑器更快地编辑照片。
+\n- 将「个性签名」加入到(设置中)的您的个人信息里，以便在大型群组聊天室中的人们认识您是谁。
+\n- 通过新的加密CDNs，更快地从大型公开频道中下载媒体。
+\n- 在选择贴图时，点击贴图面板中的“向上”按钮将其展开为全屏。
+\n- 添加模组 (P2.25) 以在聊天屏幕中显示用户个性签名
+\n- 错误修复。</string>
   <string name="TelegramForAndroid">Plus Messenger for Android</string>
   <string name="Theming">主题调整</string>
   <string name="PlusSettings">Plus 设置</string>
@@ -1038,7 +1016,6 @@
   <string name="ResetThemeSettings">重置主题设置</string>
   <string name="ResetThemeSettingsSum">撤销所有主题设置</string>
   <string name="ResetThemeToastText">重置为默认主题设置</string>
-  <string name="General">通用</string>
   <string name="Screens">界面</string>
   <string name="MainScreen">主界面</string>
   <string name="ChatScreen">聊天界面</string>
@@ -1079,7 +1056,6 @@
   <string name="EmojiViewTabIconColor">表情标签图标颜色</string>
   <string name="OnlineColor">在线时颜色</string>
   <string name="ChatMusic">音乐</string>
-  <string name="SaveTheme">保存主题</string>
   <string name="SaveThemeSum">保存您的主题到 Telegram/Themes 文件夹</string>
   <string name="SaveThemeToastText">主题已保存！</string>
   <string name="SavedTo">%1$s 被存储到 %2$s</string>
@@ -1089,7 +1065,6 @@
   <string name="NoMediaMessage">没有找到SD卡。</string>
   <string name="EnterName">输入名称</string>
   <string name="Themes">主题</string>
-  <string name="ApplyTheme">应用主题</string>
   <string name="ApplyThemeSum">从本地文件夹应用xml主题</string>
   <string name="MemberColor">成员颜色</string>
   <string name="ChecksColor">对勾颜色</string>
@@ -1119,6 +1094,13 @@
   <string name="VersionSize">版本号字体大小</string>
   <string name="HeaderTitleColor">标题颜色</string>
   <string name="HeaderIconsColor">标题图标颜色</string>
+  <string name="HeaderTabIconColor">标签图标颜色</string>
+  <string name="HeaderTabUnselectedIconColor">未选中标签的图标颜色</string>
+  <string name="HeaderTabCounterColor">标签计数颜色</string>
+  <string name="HeaderTabCounterBGColor">标签计数背景颜色</string>
+  <string name="HeaderTabCounterCountChats">显示聊天数而不是信息数</string>
+  <string name="HeaderTabCounterCountNotMuted">只显示有提示的信息数</string>
+  <string name="HideTabsCounters">隐藏标签上的计数</string>
   <string name="DividerColor">分隔线颜色</string>
   <string name="AvatarRadius">头像半径</string>
   <string name="SetMemberColor">设置成员颜色</string>
@@ -1181,7 +1163,8 @@
   <string name="RowGradientBLTR">左下右上</string>
   <string name="RowGradientList">应用渐变色到列表背景</string>
   <string name="Copied">%s 已复制到剪贴板</string>
-  <string name="JoinChannel">\n\n加入 Plus Messenger 官方频道： https://telegram.me/plusmsgr</string>
+  <string name="JoinChannel">\n\n加入 Plus Messenger 官方频道：</string>
+  <string name="ChannelLink">https://telegram.me/plusmsgr</string>
   <string name="DownloadThemes">下载主题</string>
   <string name="OfficialChannel">官方频道</string>
   <string name="DialogsSettings">对话框</string>
@@ -1189,7 +1172,7 @@
   <string name="ClickOnGroupPic">点击群组图片</string>
   <string name="ShowProfile">个人资料</string>
   <string name="ShowPics">个人资料图片</string>
-  <string name="CountSilentBGColor">静音提示信息数目背景颜色</string>
+  <string name="CountSilentBGColor">默静提示信息数目背景颜色</string>
   <string name="CommandColorCheck">机器人命令颜色</string>
   <string name="CommandColor">机器人命令颜色</string>
   <string name="HighlightSearchColor">高亮搜索颜色</string>
@@ -1209,15 +1192,133 @@
   <string name="SortByStatus">按在线状态排序</string>
   <string name="SortByLastMessage">按最后发表信息时间排序</string>
   <string name="SortByUnreadCount">按未读信息数排序</string>
-  <string name="ShowSuperGroupsTab">显示超级群组标签</string>
-  <string name="HideSuperGroupsTab">隐藏超级群组标签</string>
-  <string name="Tabs">标签</string>
-  <string name="HideShowTabs">隐藏/显示标签</string>
+  <string name="ShowSuperGroupsTab">显示超级群组标签页</string>
+  <string name="HideSuperGroupsTab">隐藏超级群组标签页</string>
+  <string name="Tabs">标签页</string>
+  <string name="HideShowTabs">隐藏/显示标签页</string>
   <string name="AddToFavorites">添加到收藏</string>
   <string name="DeleteFromFavorites">删除收藏</string>
-  <string name="NoFavoritesHelp">没有收藏内容\n\n想要添加任何聊天到此列表，只需按住某个聊天后点 “添加到收藏”。</string>
-  <string name="DisableTabsAnimation">滚动时不隐藏标签</string>
+  <string name="NoFavoritesHelp">还没收藏任何内容\n\n在聊天上长按并点击“添加到收藏”以添加到此收藏列表</string>
+  <string name="DisableTabsAnimation">滚动时不隐藏标签栏</string>
   <string name="InfiniteSwipe">循环滑动标签页</string>
   <string name="ShowDirectShareButton">显示“直接分享”按钮</string>
   <string name="Quote">引用</string>
+  <string name="RemoveUserAdmin">从管理员列表中移除</string>
+  <string name="ShowUsernameInMenu">显示用户名而非手机号码</string>
+  <string name="MarkAsRead">标记为已读</string>
+  <string name="MarkAllAsRead">标记所有聊天为已读</string>
+  <string name="CheckStyle">检查样式</string>
+  <string name="DirectShareToMenu">添加“直接分享”到弹出菜单</string>
+  <string name="DirectShareReplies">直接分享回复（除了频道）</string>
+  <string name="DirectShareShowFavsFirst">直接分享时先收藏</string>
+  <string name="ShowDateToast">在顶部显示日期</string>
+  <string name="ShowEditedMark">显示信息编辑过标记</string>
+  <string name="Edited">已编辑</string>
+  <string name="LeaveWithoutDelete">带返回选项的离开</string>
+  <string name="LeaveWithoutDeleteMsg">您要离开群组并保留返回选项吗？</string>
+  <string name="HideLeftGroup">隐藏“退出群组”信息</string>
+  <string name="HideJoinedGroup">隐藏“加入群组”信息</string>
+  <string name="HideBotKeyboard">默认隐藏机器人键盘</string>
+  <string name="ReturnToThisGroup">返回到群组</string>
+  <string name="ReturnToThisGroupMsg">如果您返回群组，在短期内不能再离开，您确定吗？</string>
+  <string name="Bio">个人简介</string>
+  <string name="EditBio">编辑个人简介</string>
+  <string name="InvertMessageOrder">信息反向排序</string>
+  <string name="SearchUserOnTwitter">在 Twitter 中搜索用户名</string>
+  <string name="ShortcutError">添加 %s 到主屏幕时发生错误</string>
+  <string name="SaveSettings">保存设置</string>
+  <string name="SaveSettingsSum">保存设置到“Telegram”目录</string>
+  <string name="RestoreSettings">恢复设置</string>
+  <string name="RestoreSettingsSum">从本地目录中恢复设置</string>
+  <string name="ResetSettings">重置设置</string>
+  <string name="ResetSettingsSum">设为默认设置</string>
+  <string name="AlsoFavorites">也是收藏</string>
+  <string name="ShowPhotoQualityBar">显示图像质量栏</string>
+  <string name="PhotoQuality">要发送图像的质量（%）</string>
+  <string name="Quality">质量：%1$s%%</string>
+  <string name="MuteNewChats">关闭新聊天提醒</string>
+  <string name="EncryptedChat">加密聊天</string>
+  <string name="MarkAsUnread">标记为未读</string>
+  <string name="NameTooShort">错误：名称太短</string>
+  <string name="SelectedMsgBGColor">已选信息背景颜色</string>
+  <string name="TabsToBottom">显示标签栏到底部</string>
+  <string name="HideSelectedTabIndicator">隐藏已选标签页提示</string>
+  <string name="TabsBGColor">标签页背景颜色</string>
+  <string name="FavIndicatorColor">收藏提示颜色</string>
+  <string name="CreatorStarColor">创建者星标颜色</string>
+  <string name="AdminStarColor">管理员星标颜色</string>
+  <string name="EnableDirectReply">启用直接回复</string>
+  <string name="ToastNotification">弹窗通知</string>
+  <string name="ShowOnlineToast">显示“在线”弹窗</string>
+  <string name="OnlineToastHelp">必须是联系人，并且“最后上线”设为“我的联系人”或“所有人”</string>
+  <string name="ShowOnlyIfContactFav">显示联系人或收藏的“在线”通知</string>
+  <string name="ShowOfflineToast">显示“离线”弹窗</string>
+  <string name="ShowTypingToast">显示“正在输入……”弹窗</string>
+  <string name="ToastNotificationSize">弹窗大小</string>
+  <string name="ToastNotificationPadding">弹窗边距</string>
+  <string name="ToastNotificationToBottom">在底部显示弹窗</string>
+  <string name="ToastNotificationPosition">弹窗通知显示位置</string>
+  <string name="Left">左</string>
+  <string name="Center">中</string>
+  <string name="Right">右</string>
+  <string name="Offline">离线</string>
+  <string name="GoToFirstMessage">跳到第一条信息</string>
+  <string name="ShowUserMessages">显示用户信息</string>
+  <string name="ShowUserMedia">显示用户媒体</string>
+  <string name="HidePinnedMsgAlert">您确定要隐藏置顶的信息吗？</string>
+  <string name="ShowQuickBar">显示快捷栏</string>
+  <string name="VerticalQuickBar">垂直快捷栏</string>
+  <string name="AlwaysBackToMain">总是回到主界面</string>
+  <string name="DoNotCloseQuickBar">不要关闭快捷栏</string>
+  <string name="HideQuickBarOnScroll">滚动时隐藏快捷栏</string>
+  <string name="CenterQuickBarButton">居中快捷栏按钮</string>
+  <string name="QuickBarColor">快捷栏颜色</string>
+  <string name="QuickBarNamesColor">快捷栏名称颜色</string>
+  <string name="NoChatsYet">没有更多的 %s</string>
+  <string name="ShowMembersOnQuickBar">显示群组成员</string>
+  <string name="SaveToCloud">保存到我的云端</string>
+  <string name="MessageSaved">信息已保存到云端</string>
+  <string name="MessagesSaved">%s 条信息已保存到云端</string>
+  <string name="SaveToCloudQuote">保存到云端时添加引用</string>
+  <string name="SwipeToReply">滑动回复</string>
+  <string name="HideInstantCamera">隐藏快拍键</string>
+  <string name="OverrideNotificationsIfPlaying">播放音视频时仍然接收通知</string>
+  <string name="HideStatusBar">查看相片时隐藏状态栏（Android 4.1 以上）</string>
+  <string name="DoNotHideStickersTab">不隐藏图贴标签</string>
+  <string name="GoToMessage">转到信息</string>
+  <string name="Download">下载</string>
+  <string name="EnableGoToMessage">启用“转到信息”</string>
+  <string name="ChatsCounters">聊天统计</string>
+  <string name="Total">合计</string>
+  <string name="Created">已创建</string>
+  <string name="Administrator">管理员</string>
+  <string name="DisableTabsScrolling">禁止标签栏滚动</string>
+  <string name="SortTabs">标签排序</string>
+  <string name="ShowTabTitle">显示标签页标题</string>
+  <string name="TabsTextSize">标签文本大小</string>
+  <string name="FitTabsToScreen">标签栏自动适合屏幕</string>
+  <string name="TabsWarningMsg">要显示标签栏需要最少选中 2 个标签页</string>
+  <string name="LastAccess">最后访问：</string>
+  <string name="HideHeaderShadow">隐藏标题阴影</string>
+  <string name="Cancelled">已取消</string>
+  <string name="TabsScreenInfo">· 取消勾选任何标签可将其隐藏
+\n· 长按可改变标签位置
+\n· 如果超级群组标签是隐藏的，所有超级群组将出现在群组标签中
+\n· 要使得标签可以看见，至少要2个标签必须显示</string>
+  <string name="DoNotChangeHeaderTitle">不更改标题内容</string>
+  <string name="Markdown">标记</string>
+  <string name="LimitTabsCounter">限制标签页计数器</string>
+  <string name="EmojiBigSizeInfo">如果选择显示系统表情（P0.1）时不可用</string>
+  <string name="UsePlusTheme">使用 Plus 主题</string>
+  <string name="PinnedMsgBgColor">置顶消息背景颜色</string>
+  <string name="MoveVersionToSettings">将版本移动到设置屏幕</string>
+  <string name="ShowAllInAdminTab">在管理员标签中显示全部</string>
+  <string name="ShowAllInAdminTabHelp">如果启用标签，将会显示您是创建者和管理员的聊天室</string>
+  <string name="ShowAllCreatedAndAdmin">显示创建和担任管理员的聊天室</string>
+  <string name="ShowCreatedOnly">只显示创建的聊天室</string>
+  <string name="Unread">未读</string>
+  <string name="ShowUnmutedFirst">先显示未关闭通知的</string>
+  <string name="DoNotShowUnmutedFirst">不要先显示未关闭通知的</string>
+  <string name="SortUnmutedFirst">排序：未关闭通知的优先</string>
+  <string name="ShowUserBio">显示用户个性签名</string>
 </resources>

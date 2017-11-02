@@ -37,8 +37,6 @@ public class NativeCrashManager {
         try {
             String filename = UUID.randomUUID().toString();
             String path = Constants.FILES_PATH + "/" + filename + ".faketrace";
-            //Log.d(Constants.TAG, "Writing unhandled exception to: " + path);
-            Log.d("NativeCrashManager", "Writing unhandled exception to: " + path);
             BufferedWriter write = new BufferedWriter(new FileWriter(path));
             write.write("Package: " + Constants.APP_PACKAGE + "\n");
             write.write("Version Code: " + Constants.APP_VERSION + "\n");
@@ -53,7 +51,7 @@ public class NativeCrashManager {
             write.close();
             return filename + ".faketrace";
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
 
         return null;
@@ -90,7 +88,7 @@ public class NativeCrashManager {
 
                     urlConnection.connect();
 
-                    FileLog.e("tmessages", "response code = " + urlConnection.getResponseCode() + " message = " + urlConnection.getResponseMessage());
+                    FileLog.e("response code = " + urlConnection.getResponseCode() + " message = " + urlConnection.getResponseMessage());
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -115,8 +113,6 @@ public class NativeCrashManager {
             };
             return dir.list(filter);
         } else {
-            //FileLog.d(Constants.TAG, "Can't search for exception as file path is null.");
-            FileLog.d("NativeCrashManager", "Can't search for exception as file path is null.");
             return new String[0];
         }
     }

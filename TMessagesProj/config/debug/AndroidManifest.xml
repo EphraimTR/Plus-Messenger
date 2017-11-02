@@ -23,9 +23,10 @@
 
     <application
         android:allowBackup="false"
-        tools:replace="android:icon"
         android:icon="@drawable/ic_launcher_beta"
+        android:roundIcon="@drawable/ic_launcher_beta"
         android:label="Plus beta"
+        tools:replace="android:icon, android:roundIcon"
         android:theme="@style/Theme.TMessages.Start"
         android:name="org.telegram.messenger.ApplicationLoader"
         android:hardwareAccelerated="@bool/useHardwareAcceleration"
@@ -67,6 +68,22 @@
         </service>
 
         <uses-library android:name="com.google.android.maps" android:required="false"/>
+
+
+        <receiver
+            tools:replace="android:enabled"
+            android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.measurement.UPLOAD" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            tools:replace="android:enabled"
+            android:name="com.google.android.gms.measurement.AppMeasurementService"
+            android:enabled="false"
+            android:exported="false" />
 
         <provider
             android:authorities="org.telegram.plus.beta.android.provider.content"

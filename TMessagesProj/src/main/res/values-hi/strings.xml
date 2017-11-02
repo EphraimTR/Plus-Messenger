@@ -238,7 +238,6 @@
   <string name="Enabled">सक्रिय</string>
   <string name="Disabled">निष्क्रिय</string>
   <string name="NotificationsService">सूचना सेवा</string>
-  <string name="NotificationsServiceDisableInfo">अधिसूचनाएँ प्राप्त करने के लिए अगर गूगल प्ले की सेवाओं आपके लिए पर्याप्त हैं, तो आप अधिसूचना सेवा को निष्क्रिय कर सकते हैं। लेकिन हम अनुप्रयोग को पृष्ठभूमि में सक्षम छोड़ने के लिए और तत्काल सूचनाएँ प्राप्त करने के लिए चलाए रखने के लिए सलाह देते हैं।</string>
   <string name="SortBy">द्वारा क्रमबद्ध</string>
   <string name="ImportContacts">इम्पोर्ट कॉन्टेक्ट्स</string>
   <string name="SortFirstName">पहला नाम</string>
@@ -252,8 +251,7 @@
   <string name="BadgeNumber">Badge Counter</string>
   <string name="Short">छोटा</string>
   <string name="Long">बड़ा</string>
-  <string name="SystemDefault">तंत्र तयशुदा</string>
-  <string name="SettingsDefault">विन्यास तयशुदा</string>
+
   <string name="AutomaticMediaDownload">स्वचालित मिडिया डाउनलोड</string>
   <string name="WhenUsingMobileData">मोबाइल डेटा का इस्तेमाल करते समय</string>
   <string name="WhenConnectedOnWiFi">वाई-फाई से जुड़े होने पर</string>
@@ -327,10 +325,7 @@
   <string name="RemoveFromListText">उस उपयोक्ता को हटाने के लिए टैप कर पकड़ें।</string>
   <!--edit video view-->
   <string name="EditVideo">विडियो संपादित करें</string>
-  <string name="OriginalVideo">मूल विडियो </string>
-  <string name="EditedVideo">संपादित विडियो</string>
   <string name="SendingVideo">विडियो भेज रहा है...</string>
-  <string name="CompressVideo">विडियो संपीड़ित करें</string>
   <!--bot-->
   <!--button titles-->
   <string name="Next">अगला</string>
@@ -412,22 +407,20 @@
   <string name="Page4Title">सुरक्षित</string>
   <string name="Page5Title">शक्तिशाली</string>
   <string name="Page6Title">क्लाउड-बेस्ड</string>
-  <string name="Page7Title">निजी</string>
   <string name="Page1Message">दुनिया का <![CDATA[<b>सबसे तेज़</b>]]> मैसेजिंग एप्प |<![CDATA[<br/>]]>ये <![CDATA[<b>मुफ्त</b>]]> और <![CDATA[<b>सुरक्षित</b>]]> है |</string>
   <string name="Page2Message"><![CDATA[<b>टेलीग्राम</b>]]> संदेश तेजी से पहुँचाता है<![CDATA[<br/>]]>किसी अन्य अनुप्रयोग के मुकाबले।</string>
   <string name="Page3Message"><![CDATA[<b>टेलीग्राम</b>]]> सदा के लिए निःशुल्क है। ना प्रचार।<![CDATA[<br/>]]>ना सदस्यता शुल्क।</string>
   <string name="Page4Message"><![CDATA[<b>टेलीग्राम</b>]]> आपके संदेशों को हैकर के हमलों से<![CDATA[<br/>]]>सुरक्षित रखता है।</string>
   <string name="Page5Message"><![CDATA[<b>टेलीग्राम</b>]]> में आपके मीडिया और चैट<![CDATA[<br/>]]>पर कोई आकार का सीमा नहीं है।</string>
   <string name="Page6Message"><![CDATA[<b>टेलीग्राम</b>]]> आपको कई उपकरणों से अपने संदेशों<![CDATA[<br/>]]> तक पहुँचने देता है।</string>
-  <string name="Page7Message"><![CDATA[<b>टेलीग्राम</b>]]> के संदेश अत्यंत गुढ़िकृत होते हैं<![CDATA[<br/>]]>और स्वतः-नष्ट भी हो जा सकते हैं।</string>
   <string name="StartMessaging">संदेश भेजना शुरु करें</string>
   <!--plural-->
-  <string name="Online_zero">%1$d ऑनलाइन</string>
-  <string name="Online_one">%1$d ऑनलाइन</string>
-  <string name="Online_two">%1$d ऑनलाइन</string>
-  <string name="Online_few">%1$d ऑनलाइन</string>
-  <string name="Online_many">%1$d ऑनलाइन</string>
-  <string name="Online_other">%1$d ऑनलाइन</string>
+  <string name="OnlineCount_zero">%1$d ऑनलाइन</string>
+  <string name="OnlineCount_one">%1$d ऑनलाइन</string>
+  <string name="OnlineCount_two">%1$d ऑनलाइन</string>
+  <string name="OnlineCount_few">%1$d ऑनलाइन</string>
+  <string name="OnlineCount_many">%1$d ऑनलाइन</string>
+  <string name="OnlineCount_other">%1$d ऑनलाइन</string>
   <string name="Members_zero">कोई सदस्य नहीं</string>
   <string name="Members_one">%1$d सदस्य</string>
   <string name="Members_two">%1$d सदस्य</string>
@@ -512,10 +505,7 @@
   <string name="formatterDay24H">HH:mm</string>
   <string name="formatterDay12H">h:mm a</string>
   <string name="formatDateAtTime">%1$s पर %2$s</string>
-  <!--update text--><!--
-  <string name="updateText">Plus Messenger for Android has been updated. New in Version 3.0:\n\n\n\n- Dedicated tabs for each one of your custom sticker sets in the sticker panel. Add custom stickers like https://telegram.me/addstickers/Animals\n- New bot API, free for everyone. If you\'re an engineer, create your own bots for games, services or integrations. Learn more at https://telegram.org/blog/bot-revolution\n https://play.google.com/store/apps/details?id=es.rafalense.themes</string>
-  <string name="updateBuild">736</string>-->
-  <!--Telegram+--><!--
+  <!--Plus--><!--
   <string name="updatePlusText"></string>-->
   <string name="TelegramForAndroid">Android  के लिए प्लस मैसेंजर</string>
   <string name="Theming">थीमिंग</string>
@@ -667,7 +657,7 @@
   <string name="RowGradientBLTR">नीची-बाएं से ऊपरी-दाएं</string>
   <string name="RowGradientList">सूची पृष्ठभूमि के लिए ग्रेडिएंट लागू करें</string>
   <string name="Copied">%s क्लिपबोर्ड पर कॉपी किया गया हैं </string>
-  <string name="JoinChannel">\n\n प्लस मेसेंजर के अधिकृत चैनल का सदस्य बने : https://telegram.me/plusmsgr</string>
+  <string name="JoinChannel">\n\n प्लस मेसेंजर के अधिकृत चैनल का सदस्य बने </string>
   <string name="DownloadThemes">थीम्स डाउनलोड करें </string>
   <string name="OfficialChannel">अधिकृत चैनल</string>
   <string name="DialogsSettings">डायलॉग्स </string>

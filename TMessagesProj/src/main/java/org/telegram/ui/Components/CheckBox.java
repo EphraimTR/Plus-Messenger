@@ -3,25 +3,27 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Components;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.AnimationCompat.ObjectAnimatorProxy;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
+import org.telegram.ui.ActionBar.Theme;
 
 public class CheckBox extends View {
 
@@ -38,9 +40,10 @@ public class CheckBox extends View {
     private Canvas checkCanvas;
 
     private boolean drawBackground;
+    private boolean hasBorder;
 
     private float progress;
-    private ObjectAnimatorProxy checkAnimator;
+    private ObjectAnimator checkAnimator;
     private boolean isCheckAnimation = true;
 
     private boolean attachedToWindow;
@@ -48,7 +51,7 @@ public class CheckBox extends View {
 
     private int size = 22;
     private int checkOffset;
-    private int color = 0xff5ec245;
+    private int color; //default 0xff5ec245
 
     private final static float progressBounceDiff = 0.2f;
 
@@ -68,13 +71,17 @@ public class CheckBox extends View {
             backgroundPaint.setColor(0xffffffff);
             backgroundPaint.setStyle(Paint.Style.STROKE);
             backgroundPaint.setStrokeWidth(AndroidUtilities.dp(2));
-            if(resId == R.drawable.checkbig){
-                SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-                backgroundPaint.setColor(themePrefs.getInt("chatAttachBGColor", 0xffffffff));
+            //plus
+            if(Theme.usePlusTheme) {
+                if (resId == R.drawable.checkbig) {
+                    SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+                    backgroundPaint.setColor(themePrefs.getInt("chatAttachBGColor", 0xffffffff));
+                }
             }
+            //
         }
 
-        checkDrawable = context.getResources().getDrawable(resId);
+        checkDrawable = context.getResources().getDrawable(resId).mutate();
     }
 
     @Override
@@ -100,6 +107,10 @@ public class CheckBox extends View {
         drawBackground = value;
     }
 
+    public void setHasBorder(boolean value) {
+        hasBorder = value;
+    }
+
     public void setCheckOffset(int value) {
         checkOffset = value;
     }
@@ -112,8 +123,20 @@ public class CheckBox extends View {
         return progress;
     }
 
-    public void setColor(int value) {
-        color = value;
+    public void setColor(int backgroundColor, int checkColor) {
+        color = backgroundColor;
+        checkDrawable.setColorFilter(new PorterDuffColorFilter(checkColor, PorterDuff.Mode.MULTIPLY));
+        invalidate();
+    }
+
+    public void setBackgroundColor(int backgroundColor) {
+        color = backgroundColor;
+        invalidate();
+    }
+
+    public void setCheckColor(int checkColor) {
+        checkDrawable.setColorFilter(new PorterDuffColorFilter(checkColor, PorterDuff.Mode.MULTIPLY));
+        invalidate();
     }
 
     private void cancelCheckAnimator() {
@@ -124,7 +147,7 @@ public class CheckBox extends View {
 
     private void animateToCheckedState(boolean newCheckedState) {
         isCheckAnimation = newCheckedState;
-        checkAnimator = ObjectAnimatorProxy.ofFloatProxy(this, "progress", newCheckedState ? 1 : 0);
+        checkAnimator = ObjectAnimator.ofFloat(this, "progress", newCheckedState ? 1 : 0);
         checkAnimator.setDuration(300);
         checkAnimator.start();
     }
@@ -192,6 +215,9 @@ public class CheckBox extends View {
 
             paint.setColor(color);
 
+            if (hasBorder) {
+                rad -= AndroidUtilities.dp(2);
+            }
             bitmapCanvas.drawCircle(getMeasuredWidth() / 2, getMeasuredHeight() / 2, rad, paint);
             bitmapCanvas.drawCircle(getMeasuredWidth() / 2, getMeasuredHeight() / 2, rad * (1 - roundProgress), eraser);
             canvas.drawBitmap(drawBitmap, 0, 0, null);

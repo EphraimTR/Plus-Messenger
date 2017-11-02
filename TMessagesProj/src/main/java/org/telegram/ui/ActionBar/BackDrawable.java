@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.ActionBar;
@@ -21,7 +21,6 @@ import org.telegram.messenger.AndroidUtilities;
 public class BackDrawable extends Drawable {
 
     private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private Paint paintB = new Paint(Paint.ANTI_ALIAS_FLAG);
     private boolean reverseAngle = false;
     private long lastFrameTime;
     private boolean animationInProgress;
@@ -30,12 +29,25 @@ public class BackDrawable extends Drawable {
     private int currentAnimationTime;
     private boolean alwaysClose;
     private DecelerateInterpolator interpolator = new DecelerateInterpolator();
+    private int color = 0xffffffff;
+    private int rotatedColor = 0xff757575;
+    private float animationTime = 300.0f;
+    private boolean rotated = true;
 
     public BackDrawable(boolean close) {
         super();
-        paint.setColor(0xffffffff);
         paint.setStrokeWidth(AndroidUtilities.dp(2));
         alwaysClose = close;
+    }
+
+    public void setColor(int value) {
+        color = value;
+        invalidateSelf();
+    }
+
+    public void setRotatedColor(int value) {
+        rotatedColor = value;
+        invalidateSelf();
     }
 
     public void setRotation(float rotation, boolean animated) {
@@ -48,9 +60,9 @@ public class BackDrawable extends Drawable {
         lastFrameTime = 0;
         if (animated) {
             if (currentRotation < rotation) {
-                currentAnimationTime = (int) (currentRotation * 300);
+                currentAnimationTime = (int) (currentRotation * animationTime);
             } else {
-                currentAnimationTime = (int) ((1.0f - currentRotation) * 300);
+                currentAnimationTime = (int) ((1.0f - currentRotation) * animationTime);
             }
             lastFrameTime = System.currentTimeMillis();
             finalRotation = rotation;
@@ -60,6 +72,14 @@ public class BackDrawable extends Drawable {
         invalidateSelf();
     }
 
+    public void setAnimationTime(float value) {
+        animationTime = value;
+    }
+
+    public void setRotated(boolean value) {
+        rotated = value;
+    }
+
     @Override
     public void draw(Canvas canvas) {
         if (currentRotation != finalRotation) {
@@ -67,13 +87,13 @@ public class BackDrawable extends Drawable {
                 long dt = System.currentTimeMillis() - lastFrameTime;
 
                 currentAnimationTime += dt;
-                if (currentAnimationTime >= 300) {
+                if (currentAnimationTime >= animationTime) {
                     currentRotation = finalRotation;
                 } else {
                     if (currentRotation < finalRotation) {
-                        currentRotation = interpolator.getInterpolation(currentAnimationTime / 300.0f) * finalRotation;
+                        currentRotation = interpolator.getInterpolation(currentAnimationTime / animationTime) * finalRotation;
                     } else {
-                        currentRotation = 1.0f - interpolator.getInterpolation(currentAnimationTime / 300.0f);
+                        currentRotation = 1.0f - interpolator.getInterpolation(currentAnimationTime / animationTime);
                     }
                 }
             }
@@ -81,10 +101,12 @@ public class BackDrawable extends Drawable {
             invalidateSelf();
         }
 
-        int rD = (int) ((117 - 255) * currentRotation);
-        int c = Color.rgb(255 + rD, 255 + rD, 255 + rD);
+        int rD = rotated ? (int) ((Color.red(rotatedColor) - Color.red(color)) * currentRotation) : 0;
+        int rG = rotated ? (int) ((Color.green(rotatedColor) - Color.green(color)) * currentRotation) : 0;
+        int rB = rotated ? (int) ((Color.blue(rotatedColor) - Color.blue(color)) * currentRotation) : 0;
+        int c = Color.rgb(Color.red(color) + rD, Color.green(color) + rG, Color.blue(color) + rB);
         paint.setColor(c);
-        if(currentRotation < 1)paint.setColor(paintB.getColor());
+
         canvas.save();
         canvas.translate(getIntrinsicWidth() / 2, getIntrinsicHeight() / 2);
         float rotation = currentRotation;
@@ -112,11 +134,6 @@ public class BackDrawable extends Drawable {
     @Override
     public void setColorFilter(ColorFilter cf) {
 
-    }
-    //Plus
-    public void setColor(int color) {
-        paint.setColor(color);
-        paintB.setColor(color);
     }
 
     @Override

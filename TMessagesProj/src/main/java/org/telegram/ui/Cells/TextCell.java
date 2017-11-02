@@ -3,13 +3,14 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
 
 import android.content.Context;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -21,7 +22,7 @@ import android.widget.TextView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.ui.ActionBar.SimpleTextView;
-import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.ActionBar.Theme;
 
 public class TextCell extends FrameLayout {
 
@@ -34,32 +35,37 @@ public class TextCell extends FrameLayout {
         super(context);
 
         textView = new SimpleTextView(context);
-        textView.setTextColor(0xff212121);
+        textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         textView.setTextSize(16);
-        //textView.setLines(1);
-        //textView.setMaxLines(1);
-        //textView.setSingleLine(true);
-        //textView.setEllipsize(TextUtils.TruncateAt.END);
-        textView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
-        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 16 : 71, 0, LocaleController.isRTL ? 71 : 16, 0));
+        textView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+        addView(textView);
 
         valueTextView = new SimpleTextView(context);
-        //valueTextView.setTextColor(0xff2f8cc9);
-        valueTextView.setTextColor(AndroidUtilities.getIntColor("themeColor"));
+        valueTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteValueText));
         valueTextView.setTextSize(16);
-        //valueTextView.setLines(1);
-        //valueTextView.setMaxLines(1);
-        //valueTextView.setSingleLine(true);
-        valueTextView.setGravity((LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL);
-        addView(valueTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.TOP, LocaleController.isRTL ? 24 : 0, 0, LocaleController.isRTL ? 0 : 24, 0));
+        valueTextView.setGravity(LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT);
+        addView(valueTextView);
 
         imageView = new ImageView(context);
         imageView.setScaleType(ImageView.ScaleType.CENTER);
-        addView(imageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 16, 5, LocaleController.isRTL ? 16 : 0, 0));
+        imageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
+        addView(imageView);
 
         valueImageView = new ImageView(context);
         valueImageView.setScaleType(ImageView.ScaleType.CENTER);
-        addView(valueImageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 24 : 0, 0, LocaleController.isRTL ? 0 : 24, 0));
+        addView(valueImageView);
+    }
+
+    public SimpleTextView getTextView() {
+        return textView;
+    }
+
+    public SimpleTextView getValueTextView() {
+        return valueTextView;
+    }
+
+    public ImageView getValueImageView() {
+        return valueImageView;
     }
 
     @Override
@@ -118,7 +124,7 @@ public class TextCell extends FrameLayout {
         valueImageView.setVisibility(INVISIBLE);
         imageView.setPadding(0, AndroidUtilities.dp(7), 0, 0);
     }
-
+    //plus
     public void setTextSize(int size) {
         textView.setTextSize(size);
     }
@@ -130,13 +136,23 @@ public class TextCell extends FrameLayout {
     public void setValueColor(int color) {
         valueTextView.setTextColor(color);
     }
-
+    //
     public void setTextAndValue(String text, String value) {
         textView.setText(text);
         valueTextView.setText(value);
         valueTextView.setVisibility(VISIBLE);
         imageView.setVisibility(INVISIBLE);
         valueImageView.setVisibility(INVISIBLE);
+    }
+
+    public void setTextAndValueAndIcon(String text, String value, int resId) {
+        textView.setText(text);
+        valueTextView.setText(value);
+        valueTextView.setVisibility(VISIBLE);
+        valueImageView.setVisibility(INVISIBLE);
+        imageView.setVisibility(VISIBLE);
+        imageView.setPadding(0, AndroidUtilities.dp(7), 0, 0);
+        imageView.setImageResource(resId);
     }
 
     public void setTextAndValueDrawable(String text, Drawable drawable) {

@@ -19,7 +19,9 @@ package org.telegram.ui.Components;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Canvas;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,15 +37,24 @@ import java.util.LinkedList;
 public class HistorySelectorView extends LinearLayout {
 	private static final String PREFS_NAME = "RECENT_COLORS";
 	private static final String HISTORY = "HISTORY";
+	private static final String HISTORY_TG = "HISTORY_TG";
 
 	private static final int MAX_COLORS = 30;
-	
+
+	private int type;
 	JSONArray colors;
 	OnColorChangedListener listener;
 	int color;
+
+	public HistorySelectorView(Context context, int type) {
+		super(context);
+		this.type = type;
+		init();
+	}
 	
 	public HistorySelectorView(Context context) {
 		super(context);
+		type = 0;
 		init();
 	}
 	
@@ -63,7 +74,8 @@ public class HistorySelectorView extends LinearLayout {
 		makeColorList();
 	}
 	
-	private void makeColorList() {
+	public void makeColorList() {
+		Log.e("HistorySelectorView", "makeColorList");
 		LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		LinearLayout colorlist = (LinearLayout)findViewById(R.id.colorlist);
 
@@ -96,9 +108,10 @@ public class HistorySelectorView extends LinearLayout {
 	}
 	
 	public void readColors() {
+		Log.e("HistorySelectorView", "readColor");
 		SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, 0);
 		try {
-			colors = new JSONArray(prefs.getString(HISTORY, ""));
+			colors = new JSONArray(prefs.getString(type == 1 ? HISTORY_TG : HISTORY, ""));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -124,7 +137,7 @@ public class HistorySelectorView extends LinearLayout {
 					colors = newcolors;
 			}
 			Editor edit = prefs.edit();
-			edit.putString(HISTORY, colors.toString());
+			edit.putString(type == 1 ? HISTORY_TG : HISTORY, colors.toString());
 			edit.commit();
 		} catch (Exception e) {
 			e.printStackTrace();

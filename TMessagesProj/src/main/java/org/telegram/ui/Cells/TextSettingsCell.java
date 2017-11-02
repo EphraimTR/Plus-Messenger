@@ -3,16 +3,20 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
-import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.ColorInt;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -21,40 +25,37 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.LocaleController;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
+
+import java.util.ArrayList;
+
+import static org.telegram.ui.Components.LetterDrawable.paint;
 
 public class TextSettingsCell extends FrameLayout {
 
     private TextView textView;
     private TextView valueTextView;
     private ImageView valueImageView;
-    private static Paint paint;
     private boolean needDivider;
 
     public TextSettingsCell(Context context) {
         super(context);
 
-        if (paint == null) {
-            paint = new Paint();
-            paint.setColor(0xffd9d9d9);
-            paint.setStrokeWidth(1);
-        }
-
         textView = new TextView(context);
-        textView.setTextColor(0xff212121);
+        textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         textView.setLines(1);
         textView.setMaxLines(1);
         textView.setSingleLine(true);
         textView.setEllipsize(TextUtils.TruncateAt.END);
         textView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
-        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 17, 0, 45, 0));
+        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 17, 0, /*17*/45, 0));
 
         valueTextView = new TextView(context);
-        //valueTextView.setTextColor(0xff2f8cc9);
-        valueTextView.setTextColor(AndroidUtilities.getIntColor("themeColor"));
+        valueTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteValueText));
         valueTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         valueTextView.setLines(1);
         valueTextView.setMaxLines(1);
@@ -66,12 +67,13 @@ public class TextSettingsCell extends FrameLayout {
         valueImageView = new ImageView(context);
         valueImageView.setScaleType(ImageView.ScaleType.CENTER);
         valueImageView.setVisibility(INVISIBLE);
+        valueImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
         addView(valueImageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, 17, 0, 17, 0));
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setTheme();
+        if(Theme.usePlusTheme)setTheme();
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), AndroidUtilities.dp(48) + (needDivider ? 1 : 0));
 
         int availableWidth = getMeasuredWidth() - getPaddingLeft() - getPaddingRight() - AndroidUtilities.dp(34);
@@ -88,6 +90,14 @@ public class TextSettingsCell extends FrameLayout {
         textView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
     }
 
+    public TextView getTextView() {
+        return textView;
+    }
+
+    public TextView getValueTextView() {
+        return valueTextView;
+    }
+
     public void setTextColor(int color) {
         textView.setTextColor(color);
     }
@@ -95,11 +105,45 @@ public class TextSettingsCell extends FrameLayout {
     public void setTextValueColor(int color) {
         valueTextView.setTextColor(color);
     }
-
+    //plus
     public void setDividerColor(int color) {
         paint.setColor(color);
     }
 
+    private void setTheme(){
+        int bgColor = Theme.prefBGColor;
+        int divColor = Theme.prefDividerColor;
+        int titleColor = Theme.prefTitleColor;
+        int sColor = Theme.prefSectionColor;
+        String tag = getTag() != null ? getTag().toString() : "";
+        if(tag.contains("Profile")){
+            setBackgroundColor(Theme.profileRowColor);
+            if(Theme.profileRowColor != 0xffffffff)paint.setColor(Theme.profileRowColor);
+            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+            titleColor = preferences.getInt("profileTitleColor", 0xff212121);
+            textView.setTextColor(titleColor);
+            if(bgColor != 0xffffffff)valueTextView.setTextColor(0x00000000);
+        }else{
+            setBackgroundColor(bgColor);
+            textView.setTextColor(titleColor);
+            paint.setColor(divColor);
+            valueTextView.setTextColor(sColor);
+        }
+    }
+
+    public void setTextAndIcon(String text, Drawable resDr, boolean divider) {
+        textView.setText(text);
+        valueTextView.setVisibility(INVISIBLE);
+        if (resDr != null) {
+            valueImageView.setVisibility(VISIBLE);
+            valueImageView.setImageDrawable(resDr);
+        } else {
+            valueImageView.setVisibility(INVISIBLE);
+        }
+        needDivider = divider;
+        setWillNotDraw(!divider);
+    }
+    //
     public void setText(String text, boolean divider) {
         textView.setText(text);
         valueTextView.setVisibility(INVISIBLE);
@@ -135,48 +179,32 @@ public class TextSettingsCell extends FrameLayout {
         setWillNotDraw(!divider);
     }
 
-    public void setTextAndIcon(String text, Drawable resDr, boolean divider) {
-        textView.setText(text);
-        valueTextView.setVisibility(INVISIBLE);
-        if (resDr != null) {
-            valueImageView.setVisibility(VISIBLE);
-            valueImageView.setImageDrawable(resDr);
+    public void setEnabled(boolean value, ArrayList<Animator> animators) {
+        setEnabled(value);
+        if (animators != null) {
+            animators.add(ObjectAnimator.ofFloat(textView, "alpha", value ? 1.0f : 0.5f));
+            if (valueTextView.getVisibility() == VISIBLE) {
+                animators.add(ObjectAnimator.ofFloat(valueTextView, "alpha", value ? 1.0f : 0.5f));
+            }
+            if (valueImageView.getVisibility() == VISIBLE) {
+                animators.add(ObjectAnimator.ofFloat(valueImageView, "alpha", value ? 1.0f : 0.5f));
+            }
         } else {
-            valueImageView.setVisibility(INVISIBLE);
+            textView.setAlpha(value ? 1.0f : 0.5f);
+            if (valueTextView.getVisibility() == VISIBLE) {
+                valueTextView.setAlpha(value ? 1.0f : 0.5f);
+            }
+            if (valueImageView.getVisibility() == VISIBLE) {
+                valueImageView.setAlpha(value ? 1.0f : 0.5f);
+            }
         }
-        needDivider = divider;
-        setWillNotDraw(!divider);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         if (needDivider) {
-            canvas.drawLine(getPaddingLeft(), getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, paint);
+            canvas.drawLine(getPaddingLeft(), getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, Theme.dividerPaint);
         }
-    }
-
-    private void setTheme(){
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int defColor = preferences.getInt("themeColor", AndroidUtilities.defColor);
-
-        int bgColor = preferences.getInt("prefBGColor", 0xffffffff);
-        int divColor = preferences.getInt("prefDividerColor", 0xffd9d9d9);
-        int titleColor = preferences.getInt("prefTitleColor", 0xff212121);
-        int sColor = preferences.getInt("prefSectionColor", defColor);
-        String tag = getTag() != null ? getTag().toString() : "";
-        if(tag.contains("Profile")){
-            bgColor = preferences.getInt("profileRowColor", 0xffffffff);
-            setBackgroundColor(bgColor);
-            if(bgColor != 0xffffffff)paint.setColor(bgColor);
-            titleColor = preferences.getInt("profileTitleColor", 0xff212121);
-            textView.setTextColor(titleColor);
-            if(bgColor != 0xffffffff)valueTextView.setTextColor(0x00000000);
-        }else{
-            setBackgroundColor(bgColor);
-            textView.setTextColor(titleColor);
-            paint.setColor(divColor);
-            valueTextView.setTextColor(sColor);
-        }
-
     }
 }
+    

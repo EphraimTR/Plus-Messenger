@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.messenger.browser;
@@ -91,9 +91,15 @@ public class Browser {
                 @Override
                 public void onServiceConnected(CustomTabsClient client) {
                     customTabsClient = client;
+                    if (MediaController.getInstance().canCustomTabs()) {
                     if (customTabsClient != null) {
+                        try {
                         customTabsClient.warmup(0);
+                        } catch (Exception e) {
+                                FileLog.e(e);
+                        }
                     }
+                }
                 }
 
                 @Override
@@ -105,7 +111,7 @@ public class Browser {
                 customTabsServiceConnection = null;
             }
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
     }
 
@@ -120,7 +126,7 @@ public class Browser {
         try {
             activity.unbindService(customTabsServiceConnection);
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
         customTabsClient = null;
         customTabsSession = null;
@@ -129,11 +135,14 @@ public class Browser {
     private static class NavigationCallback extends CustomTabsCallback {
         @Override
         public void onNavigationEvent(int navigationEvent, Bundle extras) {
-            FileLog.e("tmessages", "code = " + navigationEvent + " extras " + extras);
+
         }
     }
 
     public static void openUrl(Context context, String url) {
+        if (url == null) {
+            return;
+        }
         openUrl(context, Uri.parse(url), true);
     }
 
@@ -153,27 +162,34 @@ public class Browser {
             return;
         }
 
-        try {
             //plus to open themes in themes app
             if(uri.toString().contains("plusmessenger.org/theme/")){
                 allowCustom = false;
             }//
+            String scheme = uri.getScheme() != null ? uri.getScheme().toLowerCase() : "";
             boolean internalUri = isInternalUri(uri);
-            if (Build.VERSION.SDK_INT >= 15 && allowCustom && MediaController.getInstance().canCustomTabs() && !internalUri) {
+        try {
+            //String scheme = uri.getScheme() != null ? uri.getScheme().toLowerCase() : "";
+            if (Build.VERSION.SDK_INT >= 15 && allowCustom && MediaController.getInstance().canCustomTabs() && !internalUri && !scheme.equals("tel")) {
                 Intent share = new Intent(ApplicationLoader.applicationContext, ShareBroadcastReceiver.class);
                 share.setAction(Intent.ACTION_SEND);
 
                 CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(getSession());
+                //builder.setToolbarColor(Theme.getColor(Theme.key_actionBarDefault));
                 SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-                int color = themePrefs.getInt("chatHeaderColor", themePrefs.getInt("themeColor", AndroidUtilities.defColor));
+                int color = Theme.chatHeaderColor; //themePrefs.getInt("chatHeaderColor", themePrefs.getInt("themeColor", AndroidUtilities.defColor));
                 color = color == 0xffffffff ? AndroidUtilities.setDarkColor(color, 0x20) : color;
-                builder.setToolbarColor(Theme.ACTION_BAR_COLOR);
                 builder.setToolbarColor(color);
                 builder.setShowTitle(true);
                 builder.setActionButton(BitmapFactory.decodeResource(context.getResources(), R.drawable.abc_ic_menu_share_mtrl_alpha), LocaleController.getString("ShareFile", R.string.ShareFile), PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 0, share, 0), false);
                 CustomTabsIntent intent = builder.build();
                 intent.launchUrl((Activity) context, uri);
-            } else {
+                return;
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 if (internalUri) {
                     ComponentName componentName = new ComponentName(context.getPackageName(), LaunchActivity.class.getName());
@@ -181,9 +197,8 @@ public class Browser {
                 }
                 intent.putExtra(android.provider.Browser.EXTRA_APPLICATION_ID, context.getPackageName());
                 context.startActivity(intent);
-            }
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
     }
 
@@ -194,6 +209,14 @@ public class Browser {
     public static boolean isInternalUri(Uri uri) {
         String host = uri.getHost();
         host = host != null ? host.toLowerCase() : "";
-        return "tg".equals(uri.getScheme()) || "telegram.me".equals(host) || "telegram.dog".equals(host);
+        if ("tg".equals(uri.getScheme())) {
+            return true;
+        } else if ("telegram.me".equals(host) || "t.me".equals(host) || "telegram.dog".equals(host) || "telesco.pe".equals(host)) {
+            String path = uri.getPath();
+            if (path != null && path.length() > 1) {
+                return !path.toLowerCase().equals("/iv");
+            }
+        }
+        return false;
     }
 }

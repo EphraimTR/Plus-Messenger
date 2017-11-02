@@ -3,11 +3,12 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,16 +22,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
-import org.telegram.ui.Adapters.BaseFragmentAdapter;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextColorCell;
@@ -68,6 +72,8 @@ public class ThemingSettingsActivity extends BaseFragment {
 
     public final static int CENTER = 0;
 
+    private boolean showPrefix;
+
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
@@ -91,7 +97,8 @@ public class ThemingSettingsActivity extends BaseFragment {
         titleColorRow = rowCount++;
         summaryColorRow = rowCount++;
         dividerColorRow = rowCount++;
-
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE);
+        showPrefix = preferences.getBoolean("prefShowPrefix", true);
         return true;
     }
 
@@ -123,21 +130,34 @@ public class ThemingSettingsActivity extends BaseFragment {
                 }
             });
 
+            actionBar.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showPrefix = !showPrefix;
+                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putBoolean("prefShowPrefix", showPrefix).apply();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                }
+            });
+
             listAdapter = new ListAdapter(context);
 
             fragmentView = new FrameLayout(context);
             FrameLayout frameLayout = (FrameLayout) fragmentView;
 
             listView = new ListView(context);
-            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-            listView.setBackgroundColor(preferences.getInt("prefBGColor", 0xffffffff));
+            //SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+            if(Theme.usePlusTheme)listView.setBackgroundColor(Theme.prefBGColor);
             listView.setDivider(null);
             listView.setDividerHeight(0);
             listView.setVerticalScrollBarEnabled(false);
 
-            int def = preferences.getInt("themeColor", AndroidUtilities.defColor);
-            int hColor = preferences.getInt("prefHeaderColor", def);
-            AndroidUtilities.setListViewEdgeEffectColor(listView, /*AvatarDrawable.getProfileBackColorForId(5)*/ hColor);
+            //int def = preferences.getInt("themeColor", AndroidUtilities.defColor);
+            //int hColor = preferences.getInt("prefHeaderColor", def);
+            AndroidUtilities.setListViewEdgeEffectColor(listView, /*AvatarDrawable.getProfileBackColorForId(5)*/ Theme.prefActionbarColor);
             frameLayout.addView(listView);
             FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();
             layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT;
@@ -150,8 +170,8 @@ public class ThemingSettingsActivity extends BaseFragment {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, final int i, long l) {
 
-                    SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-                    int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
+                    //SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+                    //int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
                     if (i == headerColorRow) {
                         if (getParentActivity() == null) {
                             return;
@@ -161,9 +181,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefActionbarColor = color;
                                 commitInt("prefHeaderColor", color);
                             }
-                        },themePrefs.getInt("prefHeaderColor", defColor), CENTER, 0, false);
+                        }, Theme.prefActionbarColor, CENTER, 0, false);
                         colorDialog.show();
                     } else if (i == headerTitleColorRow) {
                         if (getParentActivity() == null) {
@@ -174,9 +195,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefActionbarTitleColor = color;
                                 commitInt("prefHeaderTitleColor", color);
                             }
-                        },themePrefs.getInt("prefHeaderTitleColor", 0xffffffff), CENTER, 0, false);
+                        }, Theme.prefActionbarTitleColor, CENTER, 0, false);
                         colorDialog.show();
                     } else if (i == headerStatusColorRow) {
                         if (getParentActivity() == null) {
@@ -187,9 +209,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefActionbarStatusColor = color;
                                 commitInt("prefHeaderStatusColor", color);
                             }
-                        },themePrefs.getInt("prefHeaderStatusColor", AndroidUtilities.getIntDarkerColor("themeColor", -0x40)), CENTER, 0, false);
+                        }, Theme.prefActionbarStatusColor, CENTER, 0, false);
                         colorDialog.show();
                     } else if (i == headerIconsColorRow) {
                         if (getParentActivity() == null) {
@@ -200,9 +223,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefActionbarIconsColor = color;
                                 commitInt( "prefHeaderIconsColor", color);
                             }
-                        },themePrefs.getInt( "prefHeaderIconsColor", 0xffffffff), CENTER, 0, true);
+                        }, Theme.prefActionbarIconsColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == avatarColorRow) {
                         if (getParentActivity() == null) {
@@ -213,9 +237,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefAvatarColor = color;
                                 commitInt( "prefAvatarColor", color);
                             }
-                        },themePrefs.getInt( "prefAvatarColor", AndroidUtilities.getIntDarkerColor("themeColor", 0x15)), CENTER, 0, false);
+                        }, Theme.prefAvatarColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == avatarRadiusRow) {
                         if (getParentActivity() == null) {
@@ -224,15 +249,16 @@ public class ThemingSettingsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("AvatarRadius", R.string.AvatarRadius));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt("prefAvatarRadius", 32);
+                        //final int currentValue = themePrefs.getInt("prefAvatarRadius", 32);
                         numberPicker.setMinValue(1);
                         numberPicker.setMaxValue(32);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.prefAvatarRadius);
                         builder.setView(numberPicker);
                         builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
+                                if (numberPicker.getValue() != Theme.prefAvatarRadius) {
+                                    Theme.prefAvatarRadius = numberPicker.getValue();
                                     commitInt("prefAvatarRadius", numberPicker.getValue());
                                 }
                             }
@@ -245,15 +271,16 @@ public class ThemingSettingsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("AvatarSize", R.string.AvatarSize));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt("prefAvatarSize", 42);
+                        //final int currentValue = themePrefs.getInt("prefAvatarSize", 42);
                         numberPicker.setMinValue(0);
                         numberPicker.setMaxValue(48);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.prefAvatarSize);
                         builder.setView(numberPicker);
                         builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
+                                if (numberPicker.getValue() != Theme.prefAvatarSize) {
+                                    Theme.prefAvatarSize = numberPicker.getValue();
                                     commitInt("prefAvatarSize", numberPicker.getValue());
                                 }
                             }
@@ -269,9 +296,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
-                                commitInt( "prefBGColor", color);
+                                Theme.prefBGColor = color;
+                                commitInt("prefBGColor", color);
                             }
-                        },themePrefs.getInt( "prefBGColor", 0xffffffff), CENTER, 0, false);
+                        }, Theme.prefBGColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == shadowColorRow) {
                         if (getParentActivity() == null) {
@@ -282,9 +310,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
-                                commitInt( "prefShadowColor", color);
+                                Theme.prefShadowColor = color;
+                                commitInt("prefShadowColor", color);
                             }
-                        },themePrefs.getInt( "prefShadowColor", 0xfff0f0f0), CENTER, 0, false);
+                        }, Theme.prefShadowColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == sectionColorRow) {
                         if (getParentActivity() == null) {
@@ -295,9 +324,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefSectionColor = color;
                                 commitInt("prefSectionColor", color);
                             }
-                        },themePrefs.getInt("prefSectionColor", defColor), CENTER, 0, false);
+                        }, Theme.prefSectionColor, CENTER, 0, false);
                         colorDialog.show();
                     } else if (i == titleColorRow) {
                         if (getParentActivity() == null) {
@@ -308,9 +338,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefTitleColor = color;
                                 commitInt("prefTitleColor", color);
                             }
-                        },themePrefs.getInt("prefTitleColor", 0xff212121), CENTER, 0, false);
+                        }, Theme.prefTitleColor, CENTER, 0, false);
                         colorDialog.show();
                     } else if (i == summaryColorRow) {
                         if (getParentActivity() == null) {
@@ -321,9 +352,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefSummaryColor = color;
                                 commitInt("prefSummaryColor", color);
                             }
-                        },themePrefs.getInt("prefSummaryColor", 0xff8a8a8a), CENTER, 0, false);
+                        }, Theme.prefSummaryColor, CENTER, 0, false);
                         colorDialog.show();
                     } else if (i == dividerColorRow) {
                         if (getParentActivity() == null) {
@@ -334,9 +366,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.prefDividerColor = color;
                                 commitInt("prefDividerColor", color);
                             }
-                        },themePrefs.getInt("prefDividerColor", 0xffd9d9d9), CENTER, 0, false);
+                        }, Theme.prefDividerColor, CENTER, 0, true);
                         colorDialog.show();
                     }
                 }
@@ -347,6 +380,18 @@ public class ThemingSettingsActivity extends BaseFragment {
                 public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                     if (getParentActivity() == null) {
                         return false;
+                    }
+                    if(BuildConfig.DEBUG){
+                        final String key = view.getTag() != null ? view.getTag().toString() : "";
+                        AndroidUtilities.runOnUIThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (getParentActivity() != null) {
+                                    Toast toast = Toast.makeText(getParentActivity(), key, Toast.LENGTH_SHORT);
+                                    toast.show();
+                                }
+                            }
+                        });
                     }
                     if (i == headerColorRow) {
                         resetInt("prefHeaderColor");
@@ -386,6 +431,7 @@ public class ThemingSettingsActivity extends BaseFragment {
                 parent.removeView(fragmentView);
             }
         }
+        if(Theme.usePlusTheme)updateTheme();
         return fragmentView;
     }
 
@@ -397,6 +443,8 @@ public class ThemingSettingsActivity extends BaseFragment {
         if (listView != null) {
             listView.invalidateViews();
         }
+        if(Theme.usePlusTheme)updateTheme();
+        refreshTheme();
     }
 
     private void commitInt(String key, int value){
@@ -407,28 +455,34 @@ public class ThemingSettingsActivity extends BaseFragment {
         if (listView != null) {
             listView.invalidateViews();
         }
+        if(Theme.usePlusTheme)updateTheme();
+        refreshTheme();
+    }
+
+    private void refreshTheme(){
+        Theme.applyPlusTheme();
+        if (parentLayout != null) {
+            parentLayout.rebuildAllFragmentViews(false, false);
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
         if (listAdapter != null) {
             listAdapter.notifyDataSetChanged();
         }
         fixLayout();
-        updateTheme();
     }
 
     private void updateTheme(){
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int def = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-        actionBar.setBackgroundColor(themePrefs.getInt("prefHeaderColor", def));
-        actionBar.setTitleColor(themePrefs.getInt("prefHeaderTitleColor", 0xffffffff));
-
+        actionBar.setBackgroundColor(Theme.prefActionbarColor);
+        actionBar.setTitleColor(Theme.prefActionbarTitleColor);
         Drawable back = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_back);
-        back.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.MULTIPLY);
+        back.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.MULTIPLY);
         actionBar.setBackButtonDrawable(back);
+        actionBar.setItemsColor(Theme.prefActionbarIconsColor, false);
+        fixLayout();
     }
 
     @Override
@@ -451,11 +505,10 @@ public class ThemingSettingsActivity extends BaseFragment {
                 return false;
             }
         });
-        listView.setAdapter(listAdapter);
-        //actionBar.setBackgroundColor(AndroidUtilities.getIntColor("themeColor"));
+        //listView.setAdapter(listAdapter);
     }
 
-    private class ListAdapter extends BaseFragmentAdapter {
+    private class ListAdapter extends BaseAdapter {
         private Context mContext;
 
         public ListAdapter(Context context) {
@@ -495,7 +548,19 @@ public class ThemingSettingsActivity extends BaseFragment {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             int type = getItemViewType(i);
-            SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+            String prefix = "";
+            if(showPrefix) {
+                prefix = "6.";
+                if (i == headerSection2Row) {
+                    prefix = prefix + "1 ";
+                } else if (i == rowsSection2Row) {
+                    prefix = prefix + "2 ";
+                } else if (i < rowsSection2Row) {
+                    prefix = prefix + "1." + i + " ";
+                } else {
+                    prefix = prefix + "2." + (i - rowsSection2Row) + " ";
+                }
+            }
             if (type == 0) {
                 if (view == null) {
                     view = new ShadowSectionCell(mContext);
@@ -507,54 +572,70 @@ public class ThemingSettingsActivity extends BaseFragment {
                     view.setBackgroundColor(0xffffffff);
                 }
                 if (i == headerSection2Row) {
-                    ((HeaderCell) view).setText(LocaleController.getString("Header", R.string.Header));
+                    ((HeaderCell) view).setText(prefix + LocaleController.getString("Header", R.string.Header));
                 } else if (i == rowsSection2Row) {
-                    ((HeaderCell) view).setText(LocaleController.getString("OptionsList", R.string.OptionsList));
+                    ((HeaderCell) view).setText(prefix + LocaleController.getString("OptionsList", R.string.OptionsList));
                 }
             }
             else if (type == 2){
                 if (view == null) {
                     view = new TextColorCell(mContext);
                 }
-
                 TextColorCell textCell = (TextColorCell) view;
-                int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
+                //int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
                 if (i == headerColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("HeaderColor", R.string.HeaderColor), themePrefs.getInt("prefHeaderColor", defColor), true);
+                    textCell.setTag("prefActionbarColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderColor", R.string.HeaderColor), Theme.prefActionbarColor, true);
                 } else if (i == headerTitleColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("HeaderTitleColor", R.string.HeaderTitleColor), themePrefs.getInt("prefHeaderTitleColor", 0xffffffff), true);
+                    textCell.setTag("prefActionbarTitleColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderTitleColor", R.string.HeaderTitleColor), Theme.prefActionbarTitleColor, true);
                 } else if (i == headerStatusColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("StatusColor", R.string.StatusColor), themePrefs.getInt("prefHeaderStatusColor", AndroidUtilities.getIntDarkerColor("themeColor", -0x40)), true);
+                    textCell.setTag("prefActionbarStatusColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("StatusColor", R.string.StatusColor), Theme.prefActionbarStatusColor, true);
                 } else if (i == headerIconsColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("HeaderIconsColor", R.string.HeaderIconsColor), themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), true);
+                    textCell.setTag("prefActionbarIconsColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderIconsColor", R.string.HeaderIconsColor), Theme.prefActionbarIconsColor, true);
                 } else if (i == avatarColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("AvatarColor", R.string.AvatarColor), themePrefs.getInt("prefAvatarColor", AndroidUtilities.getIntDarkerColor("themeColor", 0x15)), true);
+                    textCell.setTag("prefAvatarColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("AvatarColor", R.string.AvatarColor), Theme.prefAvatarColor, true);
                 } else if (i == backgroundColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("BackgroundColor", R.string.BackgroundColor), themePrefs.getInt("prefBGColor", 0xffffffff), true);
+                    textCell.setTag("prefBGColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("BackgroundColor", R.string.BackgroundColor), Theme.prefBGColor, true);
                 } else if (i == shadowColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("ShadowColor", R.string.ShadowColor), themePrefs.getInt("prefShadowColor", 0xfff0f0f0), true);
+                    textCell.setTag("prefShadowColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("ShadowColor", R.string.ShadowColor), Theme.prefShadowColor, true);
                 } else if (i == sectionColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("SectionColor", R.string.SectionColor), themePrefs.getInt("prefSectionColor", defColor), true);
+                    textCell.setTag("prefSectionColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("SectionColor", R.string.SectionColor), Theme.prefSectionColor, true);
                 } else if (i == titleColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("TitleColor", R.string.TitleColor), themePrefs.getInt("prefTitleColor", 0xff212121), true);
+                    textCell.setTag("prefTitleColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("TitleColor", R.string.TitleColor), Theme.prefTitleColor, true);
                 } else if (i == summaryColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("SummaryColor", R.string.SummaryColor), themePrefs.getInt("prefSummaryColor", 0xff8a8a8a), true);
+                    textCell.setTag("prefSummaryColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("SummaryColor", R.string.SummaryColor), Theme.prefSummaryColor, true);
                 } else if (i == dividerColorRow) {
-                    textCell.setTextAndColor(LocaleController.getString("DividerColor", R.string.DividerColor), themePrefs.getInt("prefDividerColor", 0xffd9d9d9), true);
+                    textCell.setTag("prefDividerColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("DividerColor", R.string.DividerColor), Theme.prefDividerColor, true);
                 }
             } else if (type == 3) {
                 if (view == null) {
                     view = new TextSettingsCell(mContext);
                 }
                 TextSettingsCell textCell = (TextSettingsCell) view;
+                SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
                 if (i == avatarRadiusRow) {
+                    textCell.setTag("prefAvatarRadius");
                     int size = themePrefs.getInt("prefAvatarRadius", AndroidUtilities.isTablet() ? 35 : 32);
-                    textCell.setTextAndValue(LocaleController.getString("AvatarRadius", R.string.AvatarRadius), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("AvatarRadius", R.string.AvatarRadius), String.format("%d", size), true);
                 } else if (i == avatarSizeRow) {
+                    textCell.setTag("prefAvatarSize");
                     int size = themePrefs.getInt("prefAvatarSize", AndroidUtilities.isTablet() ? 45 : 42);
-                    textCell.setTextAndValue(LocaleController.getString("AvatarSize", R.string.AvatarSize), String.format("%d", size), false);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("AvatarSize", R.string.AvatarSize), String.format("%d", size), false);
                 }
 
+            }
+            if(view != null){
+                view.setBackgroundColor(Theme.usePlusTheme ? Theme.prefBGColor : Theme.getColor(Theme.key_windowBackgroundWhite));
             }
             return view;
         }

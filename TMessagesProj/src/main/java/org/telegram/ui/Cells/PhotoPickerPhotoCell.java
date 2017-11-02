@@ -3,21 +3,26 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.AnimationCompat.AnimatorListenerAdapterProxy;
-import org.telegram.messenger.AnimationCompat.AnimatorSetProxy;
-import org.telegram.messenger.AnimationCompat.ObjectAnimatorProxy;
-import org.telegram.messenger.AnimationCompat.ViewProxy;
 import org.telegram.messenger.R;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox;
 import org.telegram.ui.Components.LayoutHelper;
@@ -27,7 +32,10 @@ public class PhotoPickerPhotoCell extends FrameLayout {
     public BackupImageView photoImage;
     public FrameLayout checkFrame;
     public CheckBox checkBox;
-    private AnimatorSetProxy animator;
+    public TextView videoTextView;
+    public FrameLayout videoInfoContainer;
+    private AnimatorSet animator;
+    private AnimatorSet animatorSet;
     public int itemWidth;
 
     public PhotoPickerPhotoCell(Context context) {
@@ -39,17 +47,53 @@ public class PhotoPickerPhotoCell extends FrameLayout {
         checkFrame = new FrameLayout(context);
         addView(checkFrame, LayoutHelper.createFrame(42, 42, Gravity.RIGHT | Gravity.TOP));
 
+        videoInfoContainer = new FrameLayout(context);
+        videoInfoContainer.setBackgroundResource(R.drawable.phototime);
+        videoInfoContainer.setPadding(AndroidUtilities.dp(3), 0, AndroidUtilities.dp(3), 0);
+        addView(videoInfoContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 16, Gravity.BOTTOM | Gravity.LEFT));
+
+        ImageView imageView1 = new ImageView(context);
+        imageView1.setImageResource(R.drawable.ic_video);
+        videoInfoContainer.addView(imageView1, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL));
+
+        videoTextView = new TextView(context);
+        videoTextView.setTextColor(0xffffffff);
+        videoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        videoInfoContainer.addView(videoTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 18, -0.7f, 0, 0));
+
         checkBox = new CheckBox(context, R.drawable.checkbig);
         checkBox.setSize(30);
         checkBox.setCheckOffset(AndroidUtilities.dp(1));
         checkBox.setDrawBackground(true);
-        checkBox.setColor(0xff3ccaef);
+        checkBox.setColor(Theme.usePlusTheme ? Theme.defColor : 0xff3ccaef, /*Theme.usePlusTheme ? Theme.chatAttachBGColor :*/ 0xffffffff);
         addView(checkBox, LayoutHelper.createFrame(30, 30, Gravity.RIGHT | Gravity.TOP, 0, 4, 4, 0));
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(MeasureSpec.makeMeasureSpec(itemWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(itemWidth, MeasureSpec.EXACTLY));
+    }
+
+    public void showCheck(boolean show) {
+        if (animatorSet != null) {
+            animatorSet.cancel();
+            animatorSet = null;
+        }
+        animatorSet = new AnimatorSet();
+        animatorSet.setInterpolator(new DecelerateInterpolator());
+        animatorSet.setDuration(180);
+        animatorSet.playTogether(
+                ObjectAnimator.ofFloat(videoInfoContainer, "alpha", show ? 1.0f : 0.0f),
+                ObjectAnimator.ofFloat(checkBox, "alpha", show ? 1.0f : 0.0f));
+        animatorSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (animation.equals(animatorSet)) {
+                    animatorSet = null;
+                }
+            }
+        });
+        animatorSet.start();
     }
 
     public void setChecked(final boolean checked, final boolean animated) {
@@ -62,13 +106,13 @@ public class PhotoPickerPhotoCell extends FrameLayout {
             if (checked) {
                 setBackgroundColor(0xff0A0A0A);
             }
-            animator = new AnimatorSetProxy();
-            animator.playTogether(ObjectAnimatorProxy.ofFloat(photoImage, "scaleX", checked ? 0.85f : 1.0f),
-                    ObjectAnimatorProxy.ofFloat(photoImage, "scaleY", checked ? 0.85f : 1.0f));
+            animator = new AnimatorSet();
+            animator.playTogether(ObjectAnimator.ofFloat(photoImage, "scaleX", checked ? 0.85f : 1.0f),
+                    ObjectAnimator.ofFloat(photoImage, "scaleY", checked ? 0.85f : 1.0f));
             animator.setDuration(200);
-            animator.addListener(new AnimatorListenerAdapterProxy() {
+            animator.addListener(new AnimatorListenerAdapter() {
                 @Override
-                public void onAnimationEnd(Object animation) {
+                public void onAnimationEnd(Animator animation) {
                     if (animator != null && animator.equals(animation)) {
                         animator = null;
                         if (!checked) {
@@ -78,7 +122,7 @@ public class PhotoPickerPhotoCell extends FrameLayout {
                 }
 
                 @Override
-                public void onAnimationCancel(Object animation) {
+                public void onAnimationCancel(Animator animation) {
                     if (animator != null && animator.equals(animation)) {
                         animator = null;
                     }
@@ -87,8 +131,8 @@ public class PhotoPickerPhotoCell extends FrameLayout {
             animator.start();
         } else {
             setBackgroundColor(checked ? 0xff0A0A0A : 0);
-            ViewProxy.setScaleX(photoImage, checked ? 0.85f : 1.0f);
-            ViewProxy.setScaleY(photoImage, checked ? 0.85f : 1.0f);
+            photoImage.setScaleX(checked ? 0.85f : 1.0f);
+            photoImage.setScaleY(checked ? 0.85f : 1.0f);
         }
     }
 }

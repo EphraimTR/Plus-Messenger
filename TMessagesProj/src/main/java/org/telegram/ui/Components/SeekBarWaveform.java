@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Components;
@@ -103,7 +103,7 @@ public class SeekBarWaveform {
                     }
                 }
                 if (startX != -1 && Math.abs(x - startX) > AndroidUtilities.getPixelsInCM(0.2f, true)) {
-                    if (parentView != null) {
+                    if (parentView != null && parentView.getParent() != null) {
                         parentView.getParent().requestDisallowInterceptTouchEvent(true);
                     }
                     startDraging = true;

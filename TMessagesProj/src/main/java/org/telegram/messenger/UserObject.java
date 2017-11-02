@@ -3,12 +3,12 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.messenger;
 
-import android.util.Log;
+import android.text.TextUtils;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.tgnet.TLRPC;
@@ -43,69 +43,6 @@ public class UserObject {
         if (name == null || name.length() == 0) {
             name = user.last_name;
         }
-        return name != null && name.length() > 0 ? name : LocaleController.getString("HiddenName", R.string.HiddenName);
+        return !TextUtils.isEmpty(name) ? name : LocaleController.getString("HiddenName", R.string.HiddenName);
     }
-
-    /*private static final int lastSize = 150;
-
-    public static String getLastName(String last) {
-        if (last == null || last.length() == 0) {
-            return "";
-        }
-        //int lastSize = 260;
-        if(last.length() > lastSize && last.charAt(last.length() -1) == '\u00A0') {
-            //Log.e("UserObject","getLastName YES " + last + " : " + last.length());
-            last = last.substring(0, lastSize - 1);
-            //last = last.substring(0, lastSize - 2);
-            last = last.replaceAll("\\s+$", "");
-            //last = last.replaceAll(" +$", "");
-        }
-        return last;
-    }
-
-    public static String getUserStatus(String status) {
-        if (status == null || status.length() == 0) {
-            return "";
-        }
-        //int lastSize = 253;
-        if(status.length() > lastSize && status.charAt(status.length() -1) == '\u00A0') {
-            //Log.e("UserObject","getUserStatus YES " + status.length());
-            status = status.substring(lastSize, status.length() - 1);
-            status = status.replaceAll("\\s+$", "");
-            //status = status.replaceAll(" +$", "");
-            return status;
-        }
-        //Log.e("UserObject","getUserStatus NO "+ status + " / "+ status.length());
-        return null;
-    }
-
-    public static String setStatus(String newLast, String newStatus){
-        //int lastSize = 253;
-        StringBuilder buffer = new StringBuilder(lastSize + newStatus.length());
-        //char c = '\n';
-        try{
-            int x = 0;
-            if(newLast.length() == 0){
-                buffer.append('\u00A0'); //Ok, malo en pc
-                buffer.append('\n');
-                //buffer.append(' ');
-                x = 2;
-            }
-            for (int i = x; i < lastSize + newStatus.length(); i++){
-                if(i < lastSize){// 0 99
-                    //buffer.append(newLast.length() > i ? newLast.charAt(i) : " ");
-                    buffer.append(newLast.length() > i ? newLast.charAt(i) : newLast.length() == i ? '\n' : '\t');
-                }
-                else{ // 100
-                    buffer.append(newStatus.length() > i - lastSize ? newStatus.charAt(i - lastSize) : " ");
-                }
-            }
-            buffer.append('\u00A0');
-            return buffer.toString();
-        } catch(Exception e) {
-            FileLog.e("ChangeName", e.toString());
-        }
-        return newLast;
-    }*/
-
 }

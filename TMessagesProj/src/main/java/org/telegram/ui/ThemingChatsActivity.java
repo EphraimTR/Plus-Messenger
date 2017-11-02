@@ -3,11 +3,12 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,11 +22,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
@@ -35,7 +39,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
-import org.telegram.ui.Adapters.BaseFragmentAdapter;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCheckCell;
@@ -48,6 +52,9 @@ import org.telegram.ui.Components.NumberPicker;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.R.attr.key;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
+import static org.telegram.ui.ActionBar.Theme.chatsFloatingPencilColor;
 import static org.telegram.ui.Components.ColorSelectorDialog.OnColorChangedListener;
 
 public class ThemingChatsActivity extends BaseFragment {
@@ -102,11 +109,20 @@ public class ThemingChatsActivity extends BaseFragment {
     private int headerTabCounterColorRow;
     private int headerTabCounterBGColorRow;
     private int headerTabCounterSilentBGColorRow;
-    private int headerTabCounterSizeRow;
+    private int tabsCounterSizeRow;
+    private int tabsBGColorRow;
+    private int favIndicatorColorRow;
+    private int tabsToBottomRow;
+    private int hideHeaderShadow;
+    private int tabsTextModeRow;
+    private int tabsTextSizeRow;
+    private int pinnedMsgBGColorRow;
 
     private int rowCount;
 
     public final static int CENTER = 0;
+
+    private boolean showPrefix;
 
     @Override
     public boolean onFragmentCreate() {
@@ -120,26 +136,34 @@ public class ThemingChatsActivity extends BaseFragment {
         headerTitleColorRow = rowCount++;
         headerTitleRow = rowCount++;
         headerIconsColorRow = rowCount++;
+        hideHeaderShadow = rowCount++;
+        tabsBGColorRow = rowCount++;
         headerTabIconColorRow = rowCount++;
         headerTabUnselectedIconColorRow = rowCount++;
         headerTabCounterColorRow = rowCount++;
+        tabsCounterSizeRow = rowCount++;
         headerTabCounterBGColorRow = rowCount++;
         headerTabCounterSilentBGColorRow = rowCount++;
-        headerTabCounterSizeRow = rowCount++;
+        tabsToBottomRow = rowCount++;
+        tabsTextModeRow = rowCount++;
+        tabsTextSizeRow = rowCount++;
 
         rowsSectionRow = rowCount++;
         rowsSection2Row = rowCount++;
+
         rowColorRow = rowCount++;
         rowGradientRow = rowCount++;
         rowGradientColorRow = rowCount++;
         //rowGradientListCheckRow = rowCount++;
+
+        pinnedMsgBGColorRow = rowCount++;
         dividerColorRow = rowCount++;
 
         avatarRadiusRow = rowCount++;
         avatarSizeRow = rowCount++;
         avatarMarginLeftRow = rowCount++;
         hideStatusIndicatorCheckRow = rowCount++;
-
+        favIndicatorColorRow = rowCount++;
         nameColorRow = rowCount++;
         unknownNameColorRow = rowCount++;
         nameSizeRow = rowCount++;
@@ -166,14 +190,14 @@ public class ThemingChatsActivity extends BaseFragment {
         floatingBGColorRow = rowCount++;
 
         highlightSearchColorRow = rowCount++;
-
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE);
+        showPrefix = preferences.getBoolean("chatsShowPrefix", true);
         return true;
     }
 
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-
     }
 
     @Override
@@ -197,20 +221,33 @@ public class ThemingChatsActivity extends BaseFragment {
                 }
             });
 
+            actionBar.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showPrefix = !showPrefix;
+                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putBoolean("chatsShowPrefix", showPrefix).apply();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                }
+            });
+
             listAdapter = new ListAdapter(context);
 
             fragmentView = new FrameLayout(context);
             FrameLayout frameLayout = (FrameLayout) fragmentView;
 
             listView = new ListView(context);
-            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-            listView.setBackgroundColor(preferences.getInt("prefBGColor", 0xffffffff));
+            //SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+            if(Theme.usePlusTheme)listView.setBackgroundColor(Theme.prefBGColor);
             listView.setDivider(null);
             listView.setDividerHeight(0);
             listView.setVerticalScrollBarEnabled(false);
-            int def = preferences.getInt("themeColor", AndroidUtilities.defColor);
-            int hColor = preferences.getInt("prefHeaderColor", def);
-            AndroidUtilities.setListViewEdgeEffectColor(listView, /*AvatarDrawable.getProfileBackColorForId(5)*/ hColor);
+            //int def = preferences.getInt("themeColor", AndroidUtilities.defColor);
+            //int hColor = preferences.getInt("prefHeaderColor", def);
+            AndroidUtilities.setListViewEdgeEffectColor(listView, /*AvatarDrawable.getProfileBackColorForId(5)*/ Theme.prefActionbarColor);
             frameLayout.addView(listView);
             FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();
             layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT;
@@ -224,8 +261,8 @@ public class ThemingChatsActivity extends BaseFragment {
                 public void onItemClick(AdapterView<?> adapterView, View view, final int i, long l) {
 
                     SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-                    int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-                    int darkColor = AndroidUtilities.getIntDarkerColor("themeColor", 0x15);
+                    //int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
+                    //int darkColor = AndroidUtilities.getIntDarkerColor("themeColor", 0x15);
                     final String key = view.getTag() != null ? view.getTag().toString() : "";
 
                     if (i == headerColorRow) {
@@ -237,10 +274,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsHeaderColor = color;
                                 commitInt( key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-
-                        },themePrefs.getInt( key, defColor), CENTER, 0, false);
+                        }, Theme.chatsHeaderColor, CENTER, 0, false);
                         colorDialog.show();
                     } else if (i == headerGradientColorRow) {
                         if (getParentActivity() == null) {
@@ -251,10 +289,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsHeaderGradientColor = color;
                                 commitInt( key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-
-                        },themePrefs.getInt( key, defColor), CENTER, 0, true);
+                        }, Theme.chatsHeaderGradientColor , CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == headerTitleColorRow) {
                         if (getParentActivity() == null) {
@@ -265,7 +304,9 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsHeaderTitleColor = color;
                                 commitInt(key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
                         },themePrefs.getInt(key, 0xffffffff), CENTER, 0, true);
                         colorDialog.show();
@@ -278,9 +319,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsHeaderIconsColor = color;
                                 commitInt(key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-                        },themePrefs.getInt(key, themePrefs.getInt("chatsHeaderIconsColor", 0xffffffff)), CENTER, 0, true);
+                        },themePrefs.getInt(key, Theme.chatsHeaderIconsColor), CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == headerTabIconColorRow) {
                         if (getParentActivity() == null) {
@@ -291,9 +334,14 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsHeaderTabIconColor = color;
                                 commitInt(key, color);
+                                SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+                                Theme.chatsHeaderTabUnselectedIconColor = themePrefs.getInt("chatsHeaderTabUnselectedIconColor", AndroidUtilities.getIntAlphaColor("chatsHeaderTabIconColor", Theme.chatsHeaderIconsColor, 0.35f));
+                                //commitInt("chatsHeaderTabUnselectedIconColor", Theme.chatsHeaderTabUnselectedIconColor);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-                        },themePrefs.getInt( key, 0xffffffff), CENTER, 0, true);
+                        }, Theme.chatsHeaderTabIconColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == headerTabUnselectedIconColorRow) {
                         if (getParentActivity() == null) {
@@ -304,9 +352,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsHeaderTabUnselectedIconColor = color;
                                 commitInt(key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-                        },themePrefs.getInt( key, AndroidUtilities.getIntAlphaColor("chatsHeaderTabIconColor", defColor, 0.3f)), CENTER, 0, true);
+                        }, Theme.chatsHeaderTabUnselectedIconColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == headerTabCounterColorRow) {
                         if (getParentActivity() == null) {
@@ -317,9 +367,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsTabCounterColor = color;
                                 commitInt(key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-                        },themePrefs.getInt(key, 0xffffffff), CENTER, 0, true);
+                        }, Theme.chatsTabCounterColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == headerTabCounterBGColorRow) {
                         if (getParentActivity() == null) {
@@ -330,9 +382,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsTabCounterBGColor = color;
                                 commitInt(key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-                        },themePrefs.getInt(key, 0xffd32f2f), CENTER, 0, true);
+                        }, Theme.chatsTabCounterBGColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == headerTabCounterSilentBGColorRow) {
                         if (getParentActivity() == null) {
@@ -343,9 +397,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsTabCounterSilentBGColor = color;
                                 commitInt(key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-                        },themePrefs.getInt(key, 0xffb9b9b9), CENTER, 0, true);
+                        }, Theme.chatsTabCounterSilentBGColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == rowColorRow) {
                         if (getParentActivity() == null) {
@@ -356,11 +412,43 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsRowColor = color;
                                 commitInt( key, color);
-                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                //NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_ROW_COLOR);
+                            }
+                        }, Theme.chatsRowColor, CENTER, 0, true);
+                        colorDialog.show();
+                    } else if (i == tabsBGColorRow) {
+                        if (getParentActivity() == null) {
+                            return;
+                        }
+                        LayoutInflater li = (LayoutInflater)getParentActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                        li.inflate(R.layout.colordialog, null, false);
+                        ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
+                            @Override
+                            public void colorChanged(int color) {
+                                Theme.chatsTabsBGColor = color;
+                                commitInt( key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
 
-                        },themePrefs.getInt( key, 0xffffffff), CENTER, 0, false);
+                        }, Theme.chatsTabsBGColor, CENTER, 0, true);
+                        colorDialog.show();
+                    } else if (i == favIndicatorColorRow) {
+                        if (getParentActivity() == null) {
+                            return;
+                        }
+                        LayoutInflater li = (LayoutInflater)getParentActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                        li.inflate(R.layout.colordialog, null, false);
+                        ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
+                            @Override
+                            public void colorChanged(int color) {
+                                Theme.chatsFavIndicatorColor = color;
+                                commitInt( key, color);
+                            }
+
+                        }, Theme.chatsFavIndicatorColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == rowGradientColorRow) {
                         if (getParentActivity() == null) {
@@ -371,10 +459,12 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsRowGradientColor = color;
                                 commitInt(key, color);
-                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                //NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_ROW_COLOR);
                             }
-                        },themePrefs.getInt( key, 0xffffffff), CENTER, 0, true);
+                        }, Theme.chatsRowGradientColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == rowGradientListCheckRow) {
                         boolean b = themePrefs.getBoolean( key, false);
@@ -385,7 +475,24 @@ public class ThemingChatsActivity extends BaseFragment {
                             ((TextCheckCell) view).setChecked(!b);
                         }
 
-                        NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                        //NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                        NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_ROW_COLOR);
+                    } else if (i == pinnedMsgBGColorRow) {
+                        if (getParentActivity() == null) {
+                            return;
+                        }
+                        LayoutInflater li = (LayoutInflater)getParentActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                        li.inflate(R.layout.colordialog, null, false);
+                        ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
+                            @Override
+                            public void colorChanged(int color) {
+                                Theme.chatsPinnedMsgBGColor = color;
+                                commitInt( key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
+                            }
+
+                        }, Theme.chatsPinnedMsgBGColor, CENTER, 0, true);
+                        colorDialog.show();
                     } else if (i == dividerColorRow) {
                         if (getParentActivity() == null) {
                             return;
@@ -395,6 +502,7 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsDividerColor = color;
                                 commitInt( key, color);
                             }
 
@@ -436,6 +544,7 @@ public class ThemingChatsActivity extends BaseFragment {
                                 if (listView != null) {
                                     listView.invalidateViews();
                                 }
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.refreshTabs, 11);
                             }
                         });
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
@@ -456,7 +565,9 @@ public class ThemingChatsActivity extends BaseFragment {
                             public void onClick(DialogInterface dialog, int which) {
                                 SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
                                 themePrefs.edit().putInt("chatsHeaderGradient", which).commit();
-                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                Theme.chatsHeaderGradient = which;
+                                //NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                                 if (listView != null) {
                                     listView.invalidateViews();
                                 }
@@ -479,8 +590,11 @@ public class ThemingChatsActivity extends BaseFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-                                themePrefs.edit().putInt("chatsRowGradient", which).commit();
-                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                Theme.chatsRowGradient = which;
+                                themePrefs.edit().putInt("chatsRowGradient", Theme.chatsRowGradient).commit();
+
+                                //NotificationCenter.getInstance().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_ROW_COLOR);
                                 if (listView != null) {
                                     listView.invalidateViews();
                                 }
@@ -497,11 +611,10 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsNameColor = color;
                                 commitInt( key, color);
                             }
-
-                        },themePrefs.getInt( key, 0xff212121), CENTER, 0, true);
-
+                        }, Theme.chatsNameColor, CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == groupNameColorRow) {
                         if (getParentActivity() == null) {
@@ -515,7 +628,7 @@ public class ThemingChatsActivity extends BaseFragment {
                                 commitInt( key, color);
                             }
 
-                        },themePrefs.getInt( key, themePrefs.getInt("chatsNameColor", 0xff212121)), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.chatsNameColor), CENTER, 0, true);
 
                         colorDialog.show();
                     } else if (i == unknownNameColorRow) {
@@ -530,7 +643,7 @@ public class ThemingChatsActivity extends BaseFragment {
                                 commitInt( key, color);
                             }
 
-                        },themePrefs.getInt( key, themePrefs.getInt("chatsNameColor", 0xff212121)), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.chatsNameColor), CENTER, 0, true);
 
                         colorDialog.show();
                     } else if (i == groupIconColorRow) {
@@ -570,10 +683,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsChecksColor = color;
                                 commitInt( key, color);
                             }
 
-                        },themePrefs.getInt( key, defColor), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.defColor), CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == messageColorRow) {
                         if (getParentActivity() == null) {
@@ -584,11 +698,10 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsMessageColor = color;
                                 commitInt( key, color);
                             }
-
-                        },themePrefs.getInt( key, 0xff8f8f8f), CENTER, 0, true);
-
+                        },themePrefs.getInt( key, 0xff808080), CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == highlightSearchColorRow) {
                         if (getParentActivity() == null) {
@@ -602,7 +715,7 @@ public class ThemingChatsActivity extends BaseFragment {
                                 commitInt( key, color);
                             }
 
-                        },themePrefs.getInt( key, AndroidUtilities.getIntDarkerColor("themeColor", -0x40)), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.lightColor), CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == memberColorRow) {
                         if (getParentActivity() == null) {
@@ -613,10 +726,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsMemberColor = color;
                                 commitInt( key, color);
                             }
 
-                        },themePrefs.getInt( key, darkColor), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.darkColor), CENTER, 0, true);
 
                         colorDialog.show();
                     } else if (i == mediaColorRow) {
@@ -628,10 +742,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsMediaColor = color;
                                 commitInt( "chatsMediaColor", color);
                             }
 
-                        },themePrefs.getInt( "chatsMediaColor", themePrefs.getInt("chatsMemberColor", darkColor)), CENTER, 0, true);
+                        },themePrefs.getInt( "chatsMediaColor", themePrefs.getInt("chatsMemberColor", Theme.darkColor)), CENTER, 0, true);
 
                         colorDialog.show();
                     } else if (i == typingColorRow) {
@@ -646,7 +761,7 @@ public class ThemingChatsActivity extends BaseFragment {
                                 commitInt( key, color);
                             }
 
-                        },themePrefs.getInt( key, defColor), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.defColor), CENTER, 0, true);
 
                         colorDialog.show();
                     } else if (i == timeColorRow) {
@@ -686,10 +801,11 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.dialogs_countPaint.setColor(color);
                                 commitInt( key, color);
                             }
 
-                        },themePrefs.getInt( key, defColor), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.defColor), CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == countSilentBGColorRow) {
                         if (getParentActivity() == null) {
@@ -700,6 +816,7 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.dialogs_countGrayPaint.setColor(color);
                                 commitInt( key, color);
                             }
 
@@ -712,39 +829,67 @@ public class ThemingChatsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("AvatarRadius", R.string.AvatarRadius));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt( key, 32);
+                        //final int currentValue = themePrefs.getInt( key, 32);
                         numberPicker.setMinValue(1);
                         numberPicker.setMaxValue(32);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.chatsAvatarRadius);
                         builder.setView(numberPicker);
 
                         builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
+                                if (numberPicker.getValue() != Theme.chatsAvatarRadius) {
+                                    Theme.chatsAvatarRadius = numberPicker.getValue();
                                     commitInt( key, numberPicker.getValue());
                                 }
                             }
                         });
 
                         showDialog(builder.create());
-                    } else if (i == headerTabCounterSizeRow) {
+                    } else if (i == tabsTextSizeRow) {
+                        if (getParentActivity() == null) {
+                            return;
+                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                        builder.setTitle(LocaleController.getString("TabsTextSize", R.string.TabsTextSize));
+                        final NumberPicker numberPicker = new NumberPicker(getParentActivity());
+                        numberPicker.setMinValue(8);
+                        numberPicker.setMaxValue(18);
+                        numberPicker.setValue(Theme.chatsTabsTextSize);
+                        builder.setView(numberPicker);
+                        builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (numberPicker.getValue() != Theme.chatsTabsTextSize) {
+                                    Theme.chatsTabsTextSize = Theme.plusTabsTextSize = numberPicker.getValue();
+                                    commitInt(key, Theme.chatsTabsTextSize);
+                                    SharedPreferences.Editor editorPlus = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE).edit();
+                                    editorPlus.putInt("tabsTextSize", Theme.chatsTabsTextSize);
+                                    editorPlus.apply();
+                                    NotificationCenter.getInstance().postNotificationName(NotificationCenter.refreshTabs, 15);
+                                }
+                            }
+                        });
+                        showDialog(builder.create());
+                    } else if (i == tabsCounterSizeRow) {
                         if (getParentActivity() == null) {
                             return;
                         }
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("CountSize", R.string.CountSize));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt( key, 11);
-                        numberPicker.setMinValue(9);
+                        //final int currentValue = themePrefs.getInt( key, 11);
+                        numberPicker.setMinValue(8);
                         numberPicker.setMaxValue(14);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.chatsTabCounterSize);
                         builder.setView(numberPicker);
                         builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
-                                    commitInt( key, numberPicker.getValue());
+                                if (numberPicker.getValue() != Theme.chatsTabCounterSize) {
+                                    Theme.chatsTabCounterSize = numberPicker.getValue();
+                                    commitInt( key, Theme.chatsTabCounterSize);
+                                    NotificationCenter.getInstance().postNotificationName(NotificationCenter.refreshTabs, 15);
                                 }
                             }
                         });
@@ -756,21 +901,20 @@ public class ThemingChatsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("AvatarSize", R.string.AvatarSize));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt( key, 52);
+                        //final int currentValue = themePrefs.getInt( key, 52);
                         numberPicker.setMinValue(0);
                         numberPicker.setMaxValue(72);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.chatsAvatarSize);
                         builder.setView(numberPicker);
-
                         builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
+                                if (numberPicker.getValue() != Theme.chatsAvatarSize) {
+                                    Theme.chatsAvatarSize = numberPicker.getValue();
                                     commitInt( key, numberPicker.getValue());
                                 }
                             }
                         });
-
                         showDialog(builder.create());
                     } else if (i == avatarMarginLeftRow) {
                         if (getParentActivity() == null) {
@@ -779,16 +923,17 @@ public class ThemingChatsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("AvatarMarginLeft", R.string.AvatarMarginLeft));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt( key, AndroidUtilities.isTablet() ? 13 : 9);
+                        //final int currentValue = themePrefs.getInt( key, AndroidUtilities.isTablet() ? 13 : 9);
                         numberPicker.setMinValue(0);
                         numberPicker.setMaxValue(18);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.chatsAvatarMarginLeft);
                         builder.setView(numberPicker);
 
                         builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
+                                if (numberPicker.getValue() != Theme.chatsAvatarMarginLeft) {
+                                    Theme.chatsAvatarMarginLeft = numberPicker.getValue();
                                     commitInt(key, numberPicker.getValue());
                                 }
                             }
@@ -802,15 +947,16 @@ public class ThemingChatsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("NameSize", R.string.NameSize));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt( key, 17);
+                        //final int currentValue = themePrefs.getInt( key, 17);
                         numberPicker.setMinValue(12);
                         numberPicker.setMaxValue(30);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.chatsNameSize);
                         builder.setView(numberPicker);
-                        AlertDialog dialog = builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
+                        builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
+                                if (numberPicker.getValue() != Theme.chatsNameSize) {
+                                    Theme.chatsNameSize = numberPicker.getValue();
                                     commitInt( key, numberPicker.getValue());
                                 }
                             }
@@ -828,7 +974,7 @@ public class ThemingChatsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("GroupNameSize", R.string.GroupNameSize));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt( key, themePrefs.getInt("chatsNameSize", 17));
+                        final int currentValue = themePrefs.getInt( key, Theme.chatsNameSize);
                         numberPicker.setMinValue(12);
                         numberPicker.setMaxValue(30);
                         numberPicker.setValue(currentValue);
@@ -892,15 +1038,16 @@ public class ThemingChatsActivity extends BaseFragment {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("CountSize", R.string.CountSize));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
-                        final int currentValue = themePrefs.getInt( key, 13);
+                        //final int currentValue = themePrefs.getInt( key, 13);
                         numberPicker.setMinValue(8);
                         numberPicker.setMaxValue(20);
-                        numberPicker.setValue(currentValue);
+                        numberPicker.setValue(Theme.chatsCountSize);
                         builder.setView(numberPicker);
                         builder.setNegativeButton(LocaleController.getString("Done", R.string.Done), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (numberPicker.getValue() != currentValue) {
+                                if (numberPicker.getValue() != Theme.chatsCountSize) {
+                                    Theme.chatsCountSize = numberPicker.getValue();
                                     commitInt(key, numberPicker.getValue());
                                 }
                             }
@@ -915,9 +1062,10 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsFloatingPencilColor = color;
                                 commitInt( key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-
                         },themePrefs.getInt( key, 0xffffffff), CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == floatingBGColorRow) {
@@ -929,19 +1077,54 @@ public class ThemingChatsActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.chatsFloatingBGColor = color;
                                 commitInt( key, color);
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                             }
-
-                        },themePrefs.getInt( key, defColor), CENTER, 0, true);
+                        },themePrefs.getInt( key, Theme.defColor), CENTER, 0, true);
                         colorDialog.show();
                     } else if (i == hideStatusIndicatorCheckRow) {
-                        boolean b = themePrefs.getBoolean( key, false);
+                        //boolean b = themePrefs.getBoolean( key, false);
+                        Theme.chatsHideStatusIndicator = !Theme.chatsHideStatusIndicator;
                         SharedPreferences.Editor editor = themePrefs.edit();
-                        editor.putBoolean( key, !b);
+                        editor.putBoolean( key, Theme.chatsHideStatusIndicator);
                         editor.commit();
                         if (view instanceof TextCheckCell) {
-                            ((TextCheckCell) view).setChecked(!b);
+                            ((TextCheckCell) view).setChecked(Theme.chatsHideStatusIndicator);
                         }
+                    } else if (i == tabsToBottomRow) {
+                        Theme.chatsTabsToBottom = Theme.plusTabsToBottom = !Theme.chatsTabsToBottom;
+                        SharedPreferences.Editor editor = themePrefs.edit();
+                        editor.putBoolean( key, Theme.chatsTabsToBottom);
+                        editor.apply();
+                        SharedPreferences.Editor editorPlus = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE).edit();
+                        editorPlus.putBoolean("tabsToBottom", Theme.chatsTabsToBottom);
+                        editorPlus.apply();
+                        NotificationCenter.getInstance().postNotificationName(NotificationCenter.refreshTabs, 14);
+                        if (view instanceof TextCheckCell) {
+                            ((TextCheckCell) view).setChecked(Theme.chatsTabsToBottom);
+                        }
+                    } else if (i == tabsTextModeRow) {
+                        Theme.chatsTabTitlesMode = Theme.plusTabTitlesMode = !Theme.chatsTabTitlesMode;
+                        SharedPreferences.Editor editor = themePrefs.edit();
+                        editor.putBoolean(key, Theme.chatsTabTitlesMode);
+                        editor.apply();
+                        SharedPreferences.Editor editorPlus = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE).edit();
+                        editorPlus.putBoolean("tabTitlesMode", Theme.chatsTabTitlesMode);
+                        editorPlus.apply();
+                        NotificationCenter.getInstance().postNotificationName(NotificationCenter.refreshTabs, 15);
+                        if (view instanceof TextCheckCell) {
+                            ((TextCheckCell) view).setChecked(Theme.chatsTabTitlesMode);
+                        }
+                    } else if (i == hideHeaderShadow) {
+                        Theme.chatsHideHeaderShadow = !Theme.chatsHideHeaderShadow;
+                        SharedPreferences.Editor editor = themePrefs.edit();
+                        editor.putBoolean( key, Theme.chatsHideHeaderShadow);
+                        editor.commit();
+                        if (view instanceof TextCheckCell) {
+                            ((TextCheckCell) view).setChecked(Theme.chatsHideHeaderShadow);
+                        }
+                        NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_HEADER_COLOR);
                     }
                 }
             });
@@ -951,6 +1134,18 @@ public class ThemingChatsActivity extends BaseFragment {
                 public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                     if (getParentActivity() == null) {
                         return false;
+                    }
+                    if(BuildConfig.DEBUG){
+                        final String key = view.getTag() != null ? view.getTag().toString() : "";
+                        AndroidUtilities.runOnUIThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (getParentActivity() != null) {
+                                    Toast toast = Toast.makeText(getParentActivity(), key, Toast.LENGTH_SHORT);
+                                    toast.show();
+                                }
+                            }
+                        });
                     }
                     resetPref(view.getTag().toString());
                     return true;
@@ -964,6 +1159,7 @@ public class ThemingChatsActivity extends BaseFragment {
                 parent.removeView(fragmentView);
             }
         }
+        if(Theme.usePlusTheme)updateTheme();
         return fragmentView;
     }
 
@@ -972,9 +1168,11 @@ public class ThemingChatsActivity extends BaseFragment {
         SharedPreferences.Editor editor = preferences.edit();
         if(key != null)editor.remove(key);
         editor.commit();
+        Theme.updateChatsColors();
         if (listView != null) {
             listView.invalidateViews();
         }
+        refreshTheme();
     }
 
     private void commitInt(String key, int value){
@@ -985,6 +1183,16 @@ public class ThemingChatsActivity extends BaseFragment {
         if (listView != null) {
             listView.invalidateViews();
         }
+
+        refreshTheme();
+
+    }
+
+    private void refreshTheme(){
+        Theme.applyPlusTheme();
+        if (parentLayout != null) {
+            parentLayout.rebuildAllFragmentViews(false, false);
+        }
     }
 
     @Override
@@ -993,19 +1201,16 @@ public class ThemingChatsActivity extends BaseFragment {
         if (listAdapter != null) {
             listAdapter.notifyDataSetChanged();
         }
-        updateTheme();
         fixLayout();
     }
 
     private void updateTheme(){
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int def = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-        actionBar.setBackgroundColor(themePrefs.getInt("prefHeaderColor", def));
-        actionBar.setTitleColor(themePrefs.getInt("prefHeaderTitleColor", 0xffffffff));
-
+        actionBar.setBackgroundColor(Theme.prefActionbarColor);
+        actionBar.setTitleColor(Theme.prefActionbarTitleColor);
         Drawable back = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_back);
-        back.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.MULTIPLY);
+        back.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.MULTIPLY);
         actionBar.setBackButtonDrawable(back);
+        actionBar.setItemsColor(Theme.prefActionbarIconsColor, false);
     }
 
     @Override
@@ -1028,11 +1233,11 @@ public class ThemingChatsActivity extends BaseFragment {
                 return false;
             }
         });
-        listView.setAdapter(listAdapter);
+        //listView.setAdapter(listAdapter);
         //actionBar.setBackgroundColor(AndroidUtilities.getIntColor("themeColor"));
     }
 
-    private class ListAdapter extends BaseFragmentAdapter {
+    private class ListAdapter extends BaseAdapter {
         private Context mContext;
 
         public ListAdapter(Context context) {
@@ -1046,11 +1251,16 @@ public class ThemingChatsActivity extends BaseFragment {
 
         @Override
         public boolean isEnabled(int i) {
-            int g = AndroidUtilities.getIntDef("chatsRowGradient",0);
-            return  i == headerColorRow || i == headerGradientRow || (AndroidUtilities.getIntDef("chatsHeaderGradient", 0) != 0 && i == headerGradientColorRow) || i == headerTitleColorRow || i == headerIconsColorRow || i == headerTabIconColorRow || i == headerTabUnselectedIconColorRow || i == headerTitleRow || i == headerTabCounterColorRow || i == headerTabCounterBGColorRow || i == headerTabCounterSilentBGColorRow || i == headerTabCounterSizeRow ||
-                    i == rowColorRow || i == rowGradientRow || (g != 0 &&  i == rowGradientColorRow) || (g != 0 && i == rowGradientListCheckRow) || i == dividerColorRow || i == avatarRadiusRow ||  i == avatarSizeRow ||   i == avatarMarginLeftRow || i == hideStatusIndicatorCheckRow ||
-                    i == nameColorRow || i == groupNameColorRow || i == unknownNameColorRow || i == groupIconColorRow || i == muteColorRow || i == checksColorRow || i == nameSizeRow || i == groupNameSizeRow || i == messageColorRow || i == highlightSearchColorRow || i == memberColorRow || i == mediaColorRow || i == typingColorRow || i == messageSizeRow ||
-                    i == timeColorRow || i == timeSizeRow || i == countColorRow || i == countSizeRow || i == countBGColorRow /*|| i == countSilentColorRow*/ || i == countSilentBGColorRow || i == floatingPencilColorRow || i == floatingBGColorRow;
+            return  i == headerColorRow || i == headerGradientRow || (Theme.chatsHeaderGradient != 0 && i == headerGradientColorRow) ||
+                    i == headerTitleColorRow || i == headerIconsColorRow || i == headerTabIconColorRow || i == headerTabUnselectedIconColorRow || i == headerTitleRow ||
+                    i == headerTabCounterColorRow || i == headerTabCounterBGColorRow || i == headerTabCounterSilentBGColorRow || i == tabsCounterSizeRow ||
+                    i == rowColorRow || i == rowGradientRow || (Theme.chatsRowGradient != 0 &&  i == rowGradientColorRow) || (Theme.chatsRowGradient != 0 && i == rowGradientListCheckRow) || i == dividerColorRow ||
+                    i == avatarRadiusRow ||  i == avatarSizeRow ||   i == avatarMarginLeftRow || i == hideHeaderShadow || i == hideStatusIndicatorCheckRow || i == nameColorRow ||
+                    i == groupNameColorRow || i == unknownNameColorRow || i == groupIconColorRow || i == muteColorRow || i == checksColorRow || i == nameSizeRow ||
+                    i == groupNameSizeRow || i == messageColorRow || i == highlightSearchColorRow || i == memberColorRow || i == mediaColorRow || i == typingColorRow ||
+                    i == messageSizeRow || i == timeColorRow || i == timeSizeRow || i == countColorRow || i == countSizeRow || i == countBGColorRow /*|| i == countSilentColorRow*/ ||
+                    i == countSilentBGColorRow || i == floatingPencilColorRow || i == floatingBGColorRow || i == tabsBGColorRow || i == favIndicatorColorRow || i == tabsToBottomRow ||
+                    i == tabsTextModeRow || i == tabsTextSizeRow || i == pinnedMsgBGColorRow;
         }
 
         @Override
@@ -1076,9 +1286,22 @@ public class ThemingChatsActivity extends BaseFragment {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             int type = getItemViewType(i);
+            String prefix = "";
+            if(showPrefix) {
+                prefix = "1.";
+                if (i == headerSection2Row) {
+                    prefix = prefix + "1 ";
+                } else if (i == rowsSection2Row) {
+                    prefix = prefix + "2 ";
+                } else if (i < rowsSection2Row) {
+                    prefix = prefix + "1." + i + " ";
+                } else {
+                    prefix = prefix + "2." + (i - rowsSection2Row) + " ";
+                }
+            }
             SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-            int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-            int darkColor = AndroidUtilities.getIntDarkerColor("themeColor", 0x15);
+            //int defColor = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
+            //int darkColor = AndroidUtilities.getIntDarkerColor("themeColor", 0x15);
             if (type == 0) {
                 if (view == null) {
                     view = new ShadowSectionCell(mContext);
@@ -1089,9 +1312,9 @@ public class ThemingChatsActivity extends BaseFragment {
                     view.setBackgroundColor(0xffffffff);
                 }
                 if (i == headerSection2Row) {
-                    ((HeaderCell) view).setText(LocaleController.getString("Header", R.string.Header));
+                    ((HeaderCell) view).setText(prefix + LocaleController.getString("Header", R.string.Header));
                 } else if (i == rowsSection2Row) {
-                    ((HeaderCell) view).setText(LocaleController.getString("ChatsList", R.string.ChatsList));
+                    ((HeaderCell) view).setText(prefix + LocaleController.getString("ChatsList", R.string.ChatsList));
                 }
             } else if (type == 2) {
                 if (view == null) {
@@ -1100,42 +1323,38 @@ public class ThemingChatsActivity extends BaseFragment {
                 TextSettingsCell textCell = (TextSettingsCell) view;
                 if (i == avatarRadiusRow) {
                     textCell.setTag("chatsAvatarRadius");
-                    int size = themePrefs.getInt("chatsAvatarRadius", AndroidUtilities.isTablet() ? 35 : 32);
-                    textCell.setTextAndValue(LocaleController.getString("AvatarRadius", R.string.AvatarRadius), String.format("%d", size), true);
-                } else if (i == headerTabCounterSizeRow) {
+                    textCell.setTextAndValue(prefix + LocaleController.getString("AvatarRadius", R.string.AvatarRadius), String.format("%d", Theme.chatsAvatarRadius), true);
+                } else if (i == tabsCounterSizeRow) {
                     textCell.setTag("chatsHeaderTabCounterSize");
-                    int size = themePrefs.getInt("chatsHeaderTabCounterSize", AndroidUtilities.isTablet() ? 13 : 11);
-                    textCell.setTextAndValue(LocaleController.getString("CountSize", R.string.CountSize), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("CountSize", R.string.CountSize), String.format("%d", Theme.chatsTabCounterSize), true);
                 } else if (i == avatarSizeRow) {
                     textCell.setTag("chatsAvatarSize");
-                    int size = themePrefs.getInt("chatsAvatarSize", AndroidUtilities.isTablet() ? 55 : 52);
-                    textCell.setTextAndValue(LocaleController.getString("AvatarSize", R.string.AvatarSize), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("AvatarSize", R.string.AvatarSize), String.format("%d", Theme.chatsAvatarSize), true);
                 } else if (i == avatarMarginLeftRow) {
                     textCell.setTag("chatsAvatarMarginLeft");
-                    int size = themePrefs.getInt("chatsAvatarMarginLeft", AndroidUtilities.isTablet() ? 13 : 9);
-                    textCell.setTextAndValue(LocaleController.getString("AvatarMarginLeft", R.string.AvatarMarginLeft), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("AvatarMarginLeft", R.string.AvatarMarginLeft), String.format("%d", Theme.chatsAvatarMarginLeft), true);
                 } else if (i == nameSizeRow) {
                     textCell.setTag("chatsNameSize");
-                    int size = themePrefs.getInt("chatsNameSize", AndroidUtilities.isTablet() ? 19 : 17);
-                    textCell.setTextAndValue(LocaleController.getString("NameSize", R.string.NameSize), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("NameSize", R.string.NameSize), String.format("%d", Theme.chatsNameSize), true);
                 } else if (i == groupNameSizeRow) {
                     textCell.setTag("chatsGroupNameSize");
-                    int size = themePrefs.getInt("chatsGroupNameSize", themePrefs.getInt("chatsNameSize", AndroidUtilities.isTablet() ? 19 : 17));
-                    textCell.setTextAndValue(LocaleController.getString("GroupNameSize", R.string.GroupNameSize), String.format("%d", size), true);
+                    int size = themePrefs.getInt("chatsGroupNameSize", Theme.chatsNameSize);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("GroupNameSize", R.string.GroupNameSize), String.format("%d", size), true);
                 } else if (i == messageSizeRow) {
                     textCell.setTag("chatsMessageSize");
                     int size = themePrefs.getInt("chatsMessageSize", AndroidUtilities.isTablet() ? 18 : 16);
-                    textCell.setTextAndValue(LocaleController.getString("MessageSize", R.string.MessageSize), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("MessageSize", R.string.MessageSize), String.format("%d", size), true);
                 } else if (i == timeSizeRow) {
                     textCell.setTag("chatsTimeSize");
                     int size = themePrefs.getInt("chatsTimeSize", AndroidUtilities.isTablet() ? 15 : 13);
-                    textCell.setTextAndValue(LocaleController.getString("TimeDateSize", R.string.TimeDateSize), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("TimeDateSize", R.string.TimeDateSize), String.format("%d", size), true);
                 } else if (i == countSizeRow) {
                     textCell.setTag("chatsCountSize");
-                    int size = themePrefs.getInt("chatsCountSize", AndroidUtilities.isTablet() ? 15 : 13);
-                    textCell.setTextAndValue(LocaleController.getString("CountSize", R.string.CountSize), String.format("%d", size), true);
+                    textCell.setTextAndValue(prefix + LocaleController.getString("CountSize", R.string.CountSize), String.format("%d", Theme.chatsCountSize), true);
+                } else if (i == tabsTextSizeRow) {
+                    textCell.setTag("chatsTabsTextSize");
+                    textCell.setTextAndValue(prefix + LocaleController.getString("TabsTextSize", R.string.TabsTextSize), String.format("%d", Theme.chatsTabsTextSize), false);
                 }
-
             } else if (type == 3){
                 if (view == null) {
                     view = new TextColorCell(mContext);
@@ -1145,94 +1364,105 @@ public class ThemingChatsActivity extends BaseFragment {
 
                 if (i == headerColorRow) {
                     textCell.setTag("chatsHeaderColor");
-                    textCell.setTextAndColor(LocaleController.getString("HeaderColor", R.string.HeaderColor), themePrefs.getInt("chatsHeaderColor", defColor), false);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderColor", R.string.HeaderColor), Theme.chatsHeaderColor, false);
                 } else if (i == headerGradientColorRow) {
                     textCell.setTag("chatsHeaderGradientColor");
-                    textCell.setTextAndColor(LocaleController.getString("RowGradientColor", R.string.RowGradientColor), themePrefs.getInt("chatsHeaderGradient", 0) == 0 ? 0x00000000 : themePrefs.getInt("chatsHeaderGradientColor", defColor), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("RowGradientColor", R.string.RowGradientColor), Theme.chatsHeaderGradientColor, true);
                 } else if (i == headerTitleColorRow) {
                     textCell.setTag("chatsHeaderTitleColor");
-                    textCell.setTextAndColor(LocaleController.getString("HeaderTitleColor", R.string.HeaderTitleColor), themePrefs.getInt(textCell.getTag().toString(), 0xffffffff), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderTitleColor", R.string.HeaderTitleColor), Theme.chatsHeaderTitleColor, true);
                 } else if (i == headerIconsColorRow) {
                     textCell.setTag("chatsHeaderIconsColor");
-                    textCell.setTextAndColor(LocaleController.getString("HeaderIconsColor", R.string.HeaderIconsColor), themePrefs.getInt(textCell.getTag().toString(), 0xffffffff), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderIconsColor", R.string.HeaderIconsColor), Theme.chatsHeaderIconsColor, true);
                 } else if (i == headerTabIconColorRow) {
+                    Theme.chatsHeaderTabIconColor = themePrefs.getInt("chatsHeaderTabIconColor", Theme.chatsHeaderIconsColor);
                     textCell.setTag("chatsHeaderTabIconColor");
-                    textCell.setTextAndColor(LocaleController.getString("HeaderTabIconColor", R.string.HeaderTabIconColor), themePrefs.getInt(textCell.getTag().toString(), themePrefs.getInt("chatsHeaderIconsColor", 0xffffffff)), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderTabIconColor", R.string.HeaderTabIconColor), Theme.chatsHeaderTabIconColor, true);
                 } else if (i == headerTabUnselectedIconColorRow) {
+                    Theme.chatsHeaderTabUnselectedIconColor = themePrefs.getInt("chatsHeaderTabUnselectedIconColor", AndroidUtilities.getIntAlphaColor("chatsHeaderTabIconColor", Theme.chatsHeaderIconsColor, 0.35f));
                     textCell.setTag("chatsHeaderTabUnselectedIconColor");
-                    textCell.setTextAndColor(LocaleController.getString("HeaderTabUnselectedIconColor", R.string.HeaderTabUnselectedIconColor), themePrefs.getInt(textCell.getTag().toString(), themePrefs.getInt("chatsHeaderTabUnselectedIconColor", AndroidUtilities.getIntAlphaColor("chatsHeaderTabIconColor", defColor, 0.3f))), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderTabUnselectedIconColor", R.string.HeaderTabUnselectedIconColor), Theme.chatsHeaderTabUnselectedIconColor, true);
                 } else if (i == headerTabCounterColorRow) {
                     textCell.setTag("chatsHeaderTabCounterColor");
-                    textCell.setTextAndColor(LocaleController.getString("HeaderTabCounterColor", R.string.HeaderTabCounterColor), themePrefs.getInt(textCell.getTag().toString(), 0xffffffff), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderTabCounterColor", R.string.HeaderTabCounterColor), Theme.chatsTabCounterColor, true);
                 } else if (i == headerTabCounterBGColorRow) {
                     textCell.setTag("chatsHeaderTabCounterBGColor");
-                    textCell.setTextAndColor(LocaleController.getString("HeaderTabCounterBGColor", R.string.HeaderTabCounterBGColor), themePrefs.getInt(textCell.getTag().toString(), 0xffD32F2F), false);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HeaderTabCounterBGColor", R.string.HeaderTabCounterBGColor), Theme.chatsTabCounterBGColor, true);
                 } else if (i == headerTabCounterSilentBGColorRow) {
                     textCell.setTag("chatsHeaderTabCounterSilentBGColor");
-                    textCell.setTextAndColor(LocaleController.getString("CountSilentBGColor", R.string.CountSilentBGColor), themePrefs.getInt(textCell.getTag().toString(), 0xffb9b9b9), false);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("CountSilentBGColor", R.string.CountSilentBGColor), Theme.chatsTabCounterSilentBGColor, false);
                 } else if (i == rowColorRow) {
                     textCell.setTag("chatsRowColor");
-                    textCell.setTextAndColor(LocaleController.getString("RowColor", R.string.RowColor), themePrefs.getInt("chatsRowColor", 0xffffffff), false);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("RowColor", R.string.RowColor), Theme.chatsRowColor, false);
+                } else if (i == tabsBGColorRow) {
+                    textCell.setTag("chatsTabsBGColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("TabsBGColor", R.string.TabsBGColor), themePrefs.getInt("chatsTabsBGColor", Theme.defColor), true);
+                } else if (i == favIndicatorColorRow) {
+                    textCell.setTag("chatsFavIndicatorColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("FavIndicatorColor", R.string.FavIndicatorColor), themePrefs.getInt("chatsFavIndicatorColor", Theme.FAV_INDICATOR_COLOR_DEF), false);
                 } else if (i == rowGradientColorRow) {
                     textCell.setTag("chatsRowGradientColor");
-                    textCell.setTextAndColor(LocaleController.getString("RowGradientColor", R.string.RowGradientColor), themePrefs.getInt("chatsRowGradient", 0) == 0 ? 0x00000000 : themePrefs.getInt("chatsRowGradientColor", 0xffffffff), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("RowGradientColor", R.string.RowGradientColor), Theme.chatsRowGradient == 0 ? 0x00000000 : Theme.chatsRowGradientColor, true);
+                } else if (i == pinnedMsgBGColorRow) {
+                    textCell.setTag("chatsPinnedMsgBGColor");
+                    textCell.setTextAndColor(prefix + LocaleController.getString("PinnedMsgBgColor", R.string.PinnedMsgBgColor), themePrefs.getInt("chatsPinnedMsgBGColor", Theme.chatsRowColor), true);
                 } else if (i == dividerColorRow) {
                     textCell.setTag("chatsDividerColor");
-                    textCell.setTextAndColor(LocaleController.getString("DividerColor", R.string.DividerColor), themePrefs.getInt("chatsDividerColor", 0xffdcdcdc), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("DividerColor", R.string.DividerColor), Theme.chatsDividerColor, true);
                 } else if (i == nameColorRow) {
                     textCell.setTag("chatsNameColor");
-                    textCell.setTextAndColor(LocaleController.getString("NameColor", R.string.NameColor), themePrefs.getInt("chatsNameColor", 0xff212121), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("NameColor", R.string.NameColor), Theme.chatsNameColor, true);
                 } else if (i == groupNameColorRow) {
                     textCell.setTag("chatsGroupNameColor");
-                    textCell.setTextAndColor(LocaleController.getString("GroupNameColor", R.string.GroupNameColor), themePrefs.getInt("chatsGroupNameColor", themePrefs.getInt("chatsNameColor", 0xff212121)), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("GroupNameColor", R.string.GroupNameColor), themePrefs.getInt("chatsGroupNameColor", Theme.chatsNameColor), true);
                 } else if (i == unknownNameColorRow) {
                     textCell.setTag("chatsUnknownNameColor");
-                    textCell.setTextAndColor(LocaleController.getString("UnknownNameColor", R.string.UnknownNameColor), themePrefs.getInt("chatsUnknownNameColor", themePrefs.getInt("chatsNameColor", 0xff212121)), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("UnknownNameColor", R.string.UnknownNameColor), themePrefs.getInt("chatsUnknownNameColor", Theme.chatsNameColor), true);
                 } else if (i == groupIconColorRow) {
                     textCell.setTag("chatsGroupIconColor");
-                    textCell.setTextAndColor(LocaleController.getString("GroupIconColor", R.string.GroupIconColor), themePrefs.getInt("chatsGroupIconColor", themePrefs.getInt("chatsGroupNameColor", 0xff000000)), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("GroupIconColor", R.string.GroupIconColor), themePrefs.getInt("chatsGroupIconColor", themePrefs.getInt("chatsGroupNameColor", 0xff000000)), true);
                 } else if (i == muteColorRow) {
                     textCell.setTag("chatsMuteColor");
-                    textCell.setTextAndColor(LocaleController.getString("MuteColor", R.string.MuteColor), themePrefs.getInt("chatsMuteColor", 0xffa8a8a8), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("MuteColor", R.string.MuteColor), themePrefs.getInt("chatsMuteColor", 0xffa8a8a8), true);
                 } else if (i == checksColorRow) {
                     textCell.setTag("chatsChecksColor");
-                    textCell.setTextAndColor(LocaleController.getString("ChecksColor", R.string.ChecksColor), themePrefs.getInt("chatsChecksColor", defColor), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("ChecksColor", R.string.ChecksColor), Theme.chatsChecksColor, true);
                 } else if (i == messageColorRow) {
                     textCell.setTag("chatsMessageColor");
-                    textCell.setTextAndColor(LocaleController.getString("MessageColor", R.string.MessageColor), themePrefs.getInt("chatsMessageColor", 0xff8f8f8f), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("MessageColor", R.string.MessageColor), Theme.chatsMessageColor, true);
                 } else if (i == memberColorRow) {
                     textCell.setTag("chatsMemberColor");
-                    textCell.setTextAndColor(LocaleController.getString("MemberColor", R.string.MemberColor), themePrefs.getInt("chatsMemberColor", darkColor), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("MemberColor", R.string.MemberColor), Theme.chatsMemberColor, true);
                 } else if (i == mediaColorRow) {
                     textCell.setTag("chatsMediaColor");
-                    textCell.setTextAndColor(LocaleController.getString("MediaColor", R.string.MediaColor), themePrefs.getInt("chatsMediaColor", themePrefs.getInt("chatsMemberColor", darkColor)), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("MediaColor", R.string.MediaColor), themePrefs.getInt("chatsMediaColor", Theme.chatsMemberColor), true);
                 } else if (i == typingColorRow) {
                     textCell.setTag("chatsTypingColor");
-                    textCell.setTextAndColor(LocaleController.getString("TypingColor", R.string.TypingColor), themePrefs.getInt(textCell.getTag().toString(), defColor), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("TypingColor", R.string.TypingColor), themePrefs.getInt(textCell.getTag().toString(), Theme.defColor), true);
                 } else if (i == timeColorRow) {
                     textCell.setTag("chatsTimeColor");
-                    textCell.setTextAndColor(LocaleController.getString("TimeDateColor", R.string.TimeDateColor), themePrefs.getInt("chatsTimeColor", 0xff999999), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("TimeDateColor", R.string.TimeDateColor), themePrefs.getInt("chatsTimeColor", 0xff999999), true);
                 } else if (i == countColorRow) {
                     textCell.setTag("chatsCountColor");
-                    textCell.setTextAndColor(LocaleController.getString("CountColor", R.string.CountColor), themePrefs.getInt("chatsCountColor", 0xffffffff), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("CountColor", R.string.CountColor), themePrefs.getInt("chatsCountColor", 0xffffffff), true);
                 } else if (i == countBGColorRow) {
                     textCell.setTag("chatsCountBGColor");
-                    textCell.setTextAndColor(LocaleController.getString("CountBGColor", R.string.CountBGColor), themePrefs.getInt("chatsCountBGColor", defColor), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("CountBGColor", R.string.CountBGColor), themePrefs.getInt("chatsCountBGColor", Theme.defColor), true);
                 } /*else if (i == countSilentColorRow) {
                     textCell.setTag("chatsCountSilentColor");
                     textCell.setTextAndColor(LocaleController.getString("CountSilentColor", R.string.CountSilentColor), themePrefs.getInt("chatsCountSilentColor", themePrefs.getInt("chatsCountColor", 0xffffffff)), true);
                 }*/ else if (i == countSilentBGColorRow) {
                     textCell.setTag("chatsCountSilentBGColor");
-                    textCell.setTextAndColor(LocaleController.getString("CountSilentBGColor", R.string.CountSilentBGColor), themePrefs.getInt("chatsCountSilentBGColor", themePrefs.getInt("chatsCountBGColor", 0xffb9b9b9)), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("CountSilentBGColor", R.string.CountSilentBGColor), themePrefs.getInt("chatsCountSilentBGColor", themePrefs.getInt("chatsCountBGColor", 0xffb9b9b9)), true);
                 } else if (i == floatingPencilColorRow) {
                     textCell.setTag("chatsFloatingPencilColor");
-                    textCell.setTextAndColor(LocaleController.getString("FloatingPencilColor", R.string.FloatingPencilColor), themePrefs.getInt("chatsFloatingPencilColor", 0xffffffff), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("FloatingPencilColor", R.string.FloatingPencilColor), Theme.chatsFloatingPencilColor, true);
                 } else if (i == floatingBGColorRow) {
                     textCell.setTag("chatsFloatingBGColor");
-                    textCell.setTextAndColor(LocaleController.getString("FloatingBGColor", R.string.FloatingBGColor), themePrefs.getInt("chatsFloatingBGColor", defColor), true);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("FloatingBGColor", R.string.FloatingBGColor), Theme.chatsFloatingBGColor, true);
                 } else if (i == highlightSearchColorRow) {
                     textCell.setTag("chatsHighlightSearchColor");
-                    textCell.setTextAndColor(LocaleController.getString("HighlightSearchColor", R.string.HighlightSearchColor), themePrefs.getInt("chatsHighlightSearchColor", AndroidUtilities.getIntDarkerColor("themeColor", -0x40)), false);
+                    textCell.setTextAndColor(prefix + LocaleController.getString("HighlightSearchColor", R.string.HighlightSearchColor), themePrefs.getInt("chatsHighlightSearchColor", Theme.lightColor), false);
                 }
             } else if (type == 4) {
                 if (view == null) {
@@ -1241,11 +1471,19 @@ public class ThemingChatsActivity extends BaseFragment {
                 TextCheckCell textCell = (TextCheckCell) view;
                 if (i == rowGradientListCheckRow) {
                     textCell.setTag("chatsRowGradientListCheck");
-                    int value = AndroidUtilities.getIntDef("chatsRowGradient", 0);
-                    textCell.setTextAndCheck(LocaleController.getString("RowGradientList", R.string.RowGradientList), value == 0 ? false : themePrefs.getBoolean("chatsRowGradientListCheck", false), true);
+                    textCell.setTextAndCheck(prefix + LocaleController.getString("RowGradientList", R.string.RowGradientList), Theme.chatsRowGradient != 0 && themePrefs.getBoolean("chatsRowGradientListCheck", false), true);
+                } else if (i == hideHeaderShadow) {
+                    textCell.setTag("chatsHideHeaderShadow");
+                    textCell.setTextAndCheck(prefix + LocaleController.getString("HideHeaderShadow", R.string.HideHeaderShadow), Theme.chatsHideHeaderShadow, true);
                 } else if (i == hideStatusIndicatorCheckRow) {
                     textCell.setTag("chatsHideStatusIndicator");
-                    textCell.setTextAndCheck(LocaleController.getString("HideStatusIndicator", R.string.HideStatusIndicator), themePrefs.getBoolean("chatsHideStatusIndicator", false), true);
+                    textCell.setTextAndCheck(prefix + LocaleController.getString("HideStatusIndicator", R.string.HideStatusIndicator), Theme.chatsHideStatusIndicator, true);
+                } else if (i == tabsToBottomRow) {
+                    textCell.setTag("chatsTabsToBottom");
+                    textCell.setTextAndCheck(prefix + LocaleController.getString("TabsToBottom", R.string.TabsToBottom), Theme.chatsTabsToBottom, true);
+                } else if (i == tabsTextModeRow) {
+                    textCell.setTag("chatsTabTitlesMode");
+                    textCell.setTextAndCheck(prefix + LocaleController.getString("ShowTabTitle", R.string.ShowTabTitle), Theme.chatsTabTitlesMode, true);
                 }
             } else if (type == 5) {
                 if (view == null) {
@@ -1266,47 +1504,49 @@ public class ThemingChatsActivity extends BaseFragment {
                         text = "-";
                     }
                     if (value == 0) {
-                        textCell.setTextAndValue(LocaleController.getString("HeaderTitle", R.string.HeaderTitle), LocaleController.getString("AppName", R.string.AppName), true);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("HeaderTitle", R.string.HeaderTitle), LocaleController.getString("AppName", R.string.AppName), true);
                     } else if (value == 1) {
-                        textCell.setTextAndValue(LocaleController.getString("HeaderTitle", R.string.HeaderTitle), LocaleController.getString("ShortAppName", R.string.ShortAppName), true);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("HeaderTitle", R.string.HeaderTitle), LocaleController.getString("ShortAppName", R.string.ShortAppName), true);
                     } else if (value == 2) {
-                        textCell.setTextAndValue(LocaleController.getString("HeaderTitle", R.string.HeaderTitle), ContactsController.formatName(user.first_name, user.last_name), true);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("HeaderTitle", R.string.HeaderTitle), ContactsController.formatName(user.first_name, user.last_name), true);
                     } else if (value == 3) {
-                        textCell.setTextAndValue(LocaleController.getString("HeaderTitle", R.string.HeaderTitle), text, true);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("HeaderTitle", R.string.HeaderTitle), text, true);
                     } else if (value == 4) {
-                        textCell.setTextAndValue(LocaleController.getString("HeaderTitle", R.string.HeaderTitle), "", true);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("HeaderTitle", R.string.HeaderTitle), "", true);
                     }
                 } else if(i == headerGradientRow){
                     textCell.setTag("chatsHeaderGradient");
                     textCell.setMultilineDetail(false);
-                    int value = themePrefs.getInt("chatsHeaderGradient", 0);
+                    int value = Theme.chatsHeaderGradient;
                     if (value == 0) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientDisabled", R.string.RowGradientDisabled), false);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientDisabled", R.string.RowGradientDisabled), false);
                     } else if (value == 1) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTopBottom", R.string.RowGradientTopBottom), false);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTopBottom", R.string.RowGradientTopBottom), false);
                     } else if (value == 2) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientLeftRight", R.string.RowGradientLeftRight), false);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientLeftRight", R.string.RowGradientLeftRight), false);
                     } else if (value == 3) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTLBR", R.string.RowGradientTLBR), false);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTLBR", R.string.RowGradientTLBR), false);
                     } else if (value == 4) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientBLTR", R.string.RowGradientBLTR), false);
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientBLTR", R.string.RowGradientBLTR), false);
                     }
                 } else if(i == rowGradientRow){
                     textCell.setTag("chatsRowGradient");
                     textCell.setMultilineDetail(false);
-                    int value = themePrefs.getInt("chatsRowGradient", 0);
-                    if (value == 0) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientDisabled", R.string.RowGradientDisabled), false);
-                    } else if (value == 1) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTopBottom", R.string.RowGradientTopBottom), false);
-                    } else if (value == 2) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientLeftRight", R.string.RowGradientLeftRight), false);
-                    } else if (value == 3) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTLBR", R.string.RowGradientTLBR), false);
-                    } else if (value == 4) {
-                        textCell.setTextAndValue(LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientBLTR", R.string.RowGradientBLTR), false);
+                    if (Theme.chatsRowGradient == 0) {
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientDisabled", R.string.RowGradientDisabled), false);
+                    } else if (Theme.chatsRowGradient == 1) {
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTopBottom", R.string.RowGradientTopBottom), false);
+                    } else if (Theme.chatsRowGradient == 2) {
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientLeftRight", R.string.RowGradientLeftRight), false);
+                    } else if (Theme.chatsRowGradient == 3) {
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientTLBR", R.string.RowGradientTLBR), false);
+                    } else if (Theme.chatsRowGradient == 4) {
+                        textCell.setTextAndValue(prefix + LocaleController.getString("RowGradient", R.string.RowGradient), LocaleController.getString("RowGradientBLTR", R.string.RowGradientBLTR), false);
                     }
                 }
+            }
+            if(view != null){
+                view.setBackgroundColor(Theme.usePlusTheme ? Theme.prefBGColor : Theme.getColor(Theme.key_windowBackgroundWhite));
             }
             return view;
         }
@@ -1317,13 +1557,18 @@ public class ThemingChatsActivity extends BaseFragment {
                 return 0;
             } else if ( i == headerSection2Row || i == rowsSection2Row ) {
                 return 1;
-            } else if ( i == avatarRadiusRow || i == avatarSizeRow || i == avatarMarginLeftRow || i == nameSizeRow || i == groupNameSizeRow ||  i == messageSizeRow || i == timeSizeRow || i == countSizeRow || i == headerTabCounterSizeRow) {
+            } else if ( i == avatarRadiusRow || i == avatarSizeRow || i == avatarMarginLeftRow || i == nameSizeRow || i == groupNameSizeRow ||  i == messageSizeRow ||
+                        i == timeSizeRow || i == countSizeRow || i == tabsCounterSizeRow || i == tabsTextSizeRow) {
                 return 2;
-            } else if ( i == headerColorRow || i == headerGradientColorRow  || i == headerTitleColorRow || i == headerIconsColorRow  || i == headerTabIconColorRow || i == headerTabUnselectedIconColorRow || i == headerTabCounterColorRow  || i == headerTabCounterBGColorRow  || i == headerTabCounterSilentBGColorRow  ||
-                        i == rowColorRow || i == rowGradientColorRow || i == dividerColorRow || i == nameColorRow || i == groupNameColorRow || i == unknownNameColorRow || i == groupIconColorRow || i == muteColorRow || i == checksColorRow || i == messageColorRow || i == highlightSearchColorRow || i == memberColorRow || i == mediaColorRow || i == typingColorRow || i == timeColorRow || i == countColorRow ||
-                        i == countBGColorRow /*|| i == countSilentColorRow*/ || i == countSilentBGColorRow || i == floatingPencilColorRow || i == floatingBGColorRow) {
+            } else if ( i == headerColorRow || i == headerGradientColorRow || i == headerTitleColorRow || i == headerIconsColorRow || i == headerTabIconColorRow ||
+                        i == headerTabUnselectedIconColorRow || i == headerTabCounterColorRow || i == headerTabCounterBGColorRow || i == headerTabCounterSilentBGColorRow ||
+                        i == rowColorRow || i == rowGradientColorRow || i == dividerColorRow || i == nameColorRow || i == groupNameColorRow || i == unknownNameColorRow ||
+                        i == groupIconColorRow || i == muteColorRow || i == checksColorRow || i == messageColorRow || i == highlightSearchColorRow || i == memberColorRow ||
+                        i == mediaColorRow || i == typingColorRow || i == timeColorRow || i == countColorRow || i == countBGColorRow /*|| i == countSilentColorRow*/ ||
+                        i == countSilentBGColorRow || i == floatingPencilColorRow || i == floatingBGColorRow || i == tabsBGColorRow || i == favIndicatorColorRow ||
+                        i == pinnedMsgBGColorRow) {
                 return 3;
-            } else if (i == rowGradientListCheckRow || i == hideStatusIndicatorCheckRow) {
+            } else if (i == rowGradientListCheckRow || i == hideHeaderShadow || i == hideStatusIndicatorCheckRow || i == tabsToBottomRow || i == tabsTextModeRow) {
                 return 4;
             } else if (i == headerTitleRow || i == headerGradientRow || i == rowGradientRow) {
                 return 5;

@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -24,6 +25,7 @@ import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox;
@@ -38,7 +40,6 @@ public class ShareDialogCell extends FrameLayout {
 
     public ShareDialogCell(Context context) {
         super(context);
-        setBackgroundResource(R.drawable.list_selector);
 
         imageView = new BackupImageView(context);
         imageView.setRoundRadius(AndroidUtilities.dp(27));
@@ -46,20 +47,19 @@ public class ShareDialogCell extends FrameLayout {
         SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
         int nColor = themePrefs.getInt("chatAttachTextColor", 0xff757575);
         nameTextView = new TextView(context);
-        //nameTextView.setTextColor(0xff212121);
-        nameTextView.setTextColor(nColor != 0xff757575 ? nColor : 0xff212121);
+        nameTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        if(Theme.usePlusTheme)nameTextView.setTextColor(nColor != 0xff757575 ? nColor : 0xff212121);
         nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
         nameTextView.setMaxLines(2);
         nameTextView.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         nameTextView.setLines(2);
         nameTextView.setEllipsize(TextUtils.TruncateAt.END);
         addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 6, 64, 6, 0));
-
         checkBox = new CheckBox(context, R.drawable.round_check2);
         checkBox.setSize(24);
         checkBox.setCheckOffset(AndroidUtilities.dp(1));
         checkBox.setVisibility(VISIBLE);
-        checkBox.setColor(0xff3ec1f9);
+        checkBox.setColor(Theme.usePlusTheme ? Theme.chatAttachTextColor : Theme.usePlusTheme && Theme.chatAttachTextColor == 0xffffffff ? Theme.chatAttachBGColor : Theme.getColor(Theme.key_dialogRoundCheckBox), Theme.getColor(Theme.key_dialogRoundCheckBoxCheck));
         addView(checkBox, LayoutHelper.createFrame(24, 24, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 17, 39, 0, 0));
     }
 
@@ -68,21 +68,10 @@ public class ShareDialogCell extends FrameLayout {
         super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(100), MeasureSpec.EXACTLY));
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (Build.VERSION.SDK_INT >= 21 && getBackground() != null) {
-            if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
-                getBackground().setHotspot(event.getX(), event.getY());
-            }
-        }
-        return super.onTouchEvent(event);
-    }
-
-    public void setDialog(TLRPC.Dialog dialog, boolean checked, CharSequence name) {
-        int lower_id = (int) dialog.id;
+    public void setDialog(int uid, boolean checked, CharSequence name) {
         TLRPC.FileLocation photo = null;
-        if (lower_id > 0) {
-            TLRPC.User user = MessagesController.getInstance().getUser(lower_id);
+        if (uid > 0) {
+            TLRPC.User user = MessagesController.getInstance().getUser(uid);
             if (name != null) {
                 nameTextView.setText(name);
             } else if (user != null) {
@@ -95,7 +84,7 @@ public class ShareDialogCell extends FrameLayout {
                 photo = user.photo.photo_small;
             }
         } else {
-            TLRPC.Chat chat = MessagesController.getInstance().getChat(-lower_id);
+            TLRPC.Chat chat = MessagesController.getInstance().getChat(-uid);
             if (name != null) {
                 nameTextView.setText(name);
             } else if (chat != null) {

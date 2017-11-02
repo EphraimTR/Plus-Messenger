@@ -208,7 +208,7 @@ public class ColorPickerView extends View {
     }
 
     private int ave(int s, int d, float p) {
-        return s + java.lang.Math.round(p * (d - s));
+        return s + Math.round(p * (d - s));
     }
 
     private int calculateColor(float angle) {
@@ -283,7 +283,7 @@ public class ColorPickerView extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mUserIsMovingPointer) {
-                    mAngle = (float) java.lang.Math.atan2(y - mSlopY, x - mSlopX);
+                    mAngle = (float) Math.atan2(y - mSlopY, x - mSlopX);
                     mPointerColor.setColor(calculateColor(mAngle));
                     setNewCenterColor(mCenterNewColor = calculateColor(mAngle));
                     invalidate();

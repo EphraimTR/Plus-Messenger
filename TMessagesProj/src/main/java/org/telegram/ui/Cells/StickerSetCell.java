@@ -3,15 +3,15 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Canvas;
-import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.os.Build;
 import android.text.TextUtils;
@@ -23,9 +23,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.AnimationCompat.ViewProxy;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
@@ -44,18 +42,11 @@ public class StickerSetCell extends FrameLayout {
     private TLRPC.TL_messages_stickerSet stickersSet;
     private Rect rect = new Rect();
 
-    private static Paint paint;
-
     public StickerSetCell(Context context) {
         super(context);
 
-        if (paint == null) {
-            paint = new Paint();
-            paint.setColor(0xffd9d9d9);
-        }
-
         textView = new TextView(context);
-        textView.setTextColor(0xff212121);
+        textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         textView.setLines(1);
         textView.setMaxLines(1);
@@ -65,7 +56,7 @@ public class StickerSetCell extends FrameLayout {
         addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT, LocaleController.isRTL ? 40 : 71, 10, LocaleController.isRTL ? 71 : 40, 0));
 
         valueTextView = new TextView(context);
-        valueTextView.setTextColor(0xff8a8a8a);
+        valueTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         valueTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         valueTextView.setLines(1);
         valueTextView.setMaxLines(1);
@@ -79,8 +70,9 @@ public class StickerSetCell extends FrameLayout {
 
         optionsButton = new ImageView(context);
         optionsButton.setFocusable(false);
-        optionsButton.setBackgroundDrawable(Theme.createBarSelectorDrawable(Theme.ACTION_BAR_AUDIO_SELECTOR_COLOR));
-        optionsButton.setImageResource(R.drawable.doc_actions_b);
+        optionsButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_stickers_menuSelector)));
+        optionsButton.setImageResource(R.drawable.msg_actions);
+        optionsButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_stickers_menu), PorterDuff.Mode.MULTIPLY));
         optionsButton.setScaleType(ImageView.ScaleType.CENTER);
         addView(optionsButton, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.TOP));
     }
@@ -88,7 +80,7 @@ public class StickerSetCell extends FrameLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(64) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
-        setTheme();
+        if(Theme.usePlusTheme)setTheme();
     }
 
      public void setStickersSet(TLRPC.TL_messages_stickerSet set, boolean divider) {
@@ -96,14 +88,14 @@ public class StickerSetCell extends FrameLayout {
         stickersSet = set;
 
         textView.setText(stickersSet.set.title);
-        if (stickersSet.set.disabled) {
-                ViewProxy.setAlpha(textView, 0.5f);
-                ViewProxy.setAlpha(valueTextView, 0.5f);
-                ViewProxy.setAlpha(imageView, 0.5f);
+        if (stickersSet.set.archived) {
+            textView.setAlpha(0.5f);
+            valueTextView.setAlpha(0.5f);
+            imageView.setAlpha(0.5f);
             } else {
-                ViewProxy.setAlpha(textView, 1.0f);
-                ViewProxy.setAlpha(valueTextView, 1.0f);
-                ViewProxy.setAlpha(imageView, 1.0f);
+            textView.setAlpha(1.0f);
+            valueTextView.setAlpha(1.0f);
+            imageView.setAlpha(1.0f);
             }
         ArrayList<TLRPC.Document> documents = set.documents;
         if (documents != null && !documents.isEmpty()) {
@@ -132,9 +124,6 @@ public class StickerSetCell extends FrameLayout {
             if (rect.contains((int) event.getX(), (int) event.getY())) {
                 return true;
             }
-            if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
-                getBackground().setHotspot(event.getX(), event.getY());
-            }
         }
         return super.onTouchEvent(event);
     }
@@ -142,19 +131,14 @@ public class StickerSetCell extends FrameLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         if (needDivider) {
-            canvas.drawLine(0, getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, paint);
+            canvas.drawLine(0, getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, Theme.dividerPaint);
         }
     }
 
     private void setTheme(){
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int bgColor = preferences.getInt("prefBGColor", 0xffffffff);
-        setBackgroundColor(bgColor);
-        int divColor = preferences.getInt("prefDividerColor", 0xffd9d9d9);
-        int titleColor = preferences.getInt("prefTitleColor", 0xff212121);
-        int summaryColor = preferences.getInt("prefSummaryColor", 0xff8a8a8a);
-        textView.setTextColor(titleColor);
-        valueTextView.setTextColor(summaryColor);
-        paint.setColor(divColor);
+        setBackgroundColor(Theme.prefBGColor);
+        textView.setTextColor(Theme.prefTitleColor);
+        valueTextView.setTextColor(Theme.prefSummaryColor);
+        Theme.dividerPaint.setColor(Theme.prefDividerColor);
     }
 }

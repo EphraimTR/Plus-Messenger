@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.messenger.video;
@@ -66,7 +66,7 @@ public class Mp4Movie {
         return cacheFile;
     }
 
-    public void addSample(int trackIndex, long offset, MediaCodec.BufferInfo bufferInfo) throws Exception {
+    public void addSample(int trackIndex, long offset, MediaCodec.BufferInfo bufferInfo) {
         if (trackIndex < 0 || trackIndex >= tracks.size()) {
             return;
         }
@@ -74,7 +74,7 @@ public class Mp4Movie {
         track.addSample(offset, bufferInfo);
     }
 
-    public int addTrack(MediaFormat mediaFormat, boolean isAudio) throws Exception {
+    public int addTrack(MediaFormat mediaFormat, boolean isAudio) {
         tracks.add(new Track(tracks.size(), mediaFormat, isAudio));
         return tracks.size() - 1;
     }

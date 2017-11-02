@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="org.telegram.messenger"
     android:installLocation="auto">
 
@@ -23,6 +24,7 @@
     <application
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
+        android:roundIcon="@drawable/ic_launcher"
         android:label="@string/ShortAppName"
         android:theme="@style/Theme.TMessages.Start"
         android:name="org.telegram.messenger.ApplicationLoader"
@@ -64,7 +66,22 @@
 
         <uses-library android:name="com.google.android.maps" android:required="false"/>
 		
-		<provider
+        <receiver
+            tools:replace="android:enabled"
+            android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.measurement.UPLOAD" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            tools:replace="android:enabled"
+            android:name="com.google.android.gms.measurement.AppMeasurementService"
+            android:enabled="false"
+            android:exported="false" />
+
+	<provider
             android:authorities="org.telegram.plus.android.provider.content"
             android:name="org.telegram.messenger.ModuleContentProvider"
             android:label="@string/AppName"

@@ -82,8 +82,6 @@
   <string name="NoBlockedGroup">"משתמשים חסומים שהוסרו מהקבוצה יכולים להתחבר רק על ידי הזמנת מנהל. קישור הזמנה לא יעבוד להם."</string>
   <string name="NewChannel">ערוץ חדש</string>
   <string name="EnterChannelName">שם ערוץ</string>
-  <string name="Comments">תגובות</string>
-  <string name="CommentsInfo">אם אתה מפעיל את תכונות התגובות, משתמשים יוכלו לדון על הודעה שלך בערוץ.</string>
   <string name="AddMutual">הוסף אנשי קשר לערוץ שלך</string>
   <string name="ChannelUsernameHelp">משתמשים יכולים לשתף קישור זה עם אחרים ולמצוא את הערוץ שלך על ידי חיפוש בטלגרם.</string>
   <!--<string name="MegaUsernameHelp">People can share this link with others and find your supergroup using Telegram search.</string>-->
@@ -102,10 +100,7 @@
   <string name="LeaveChannelMenu">עזוב את הערוץ</string>
   <string name="ChannelSettings">הגדרות</string>
   <string name="ChannelJoin">הצטרף</string>
-  <string name="OpenChannelProfile">מידע ערוץ</string>
   <string name="ChannelBroadcast">רשימת שידור</string>
-  <string name="ChannelComment">תגובה</string>
-  <string name="ShowDiscussion">הצג תגובות</string>
   <string name="ChannelAlertTitle">מה זה ערוץ?</string>
   <string name="ChannelAlertText">ערוצים הם כלי חדש להפצת ההודעות שלך לקהלים גדולים.</string>
   <string name="ChannelAlertCreate">צור ערוץ</string>
@@ -134,8 +129,6 @@
   <string name="ActionChannelChangedPhoto">תמונת ערוץ שונתה</string>
   <string name="ActionChannelRemovedPhoto">תמונת ערוץ הוסרה</string>
   <string name="ActionChannelChangedTitle">שם ערוץ שונה ל un2</string>
-  <string name="ChannelPublicLimitReached">מצטערים, יצרת יותר מידי ערוצים ציבוריים. אתה יכול ליצור ערוץ פרטי או למחוק תחילה ערוץ קיים.</string>
-  <string name="ChannelModerator">מפקח</string>
   <string name="ChannelCreator">יוצר</string>
   <string name="ChannelEditor">מנהל</string>
   <string name="ChannelMute">השתק</string>
@@ -407,20 +400,17 @@
   <string name="UsernameEmpty">ללא</string>
   <string name="ErrorOccurred">אירעה שגיאה.</string>
   <!--stickers view-->
-  <string name="Stickers">מדבקות</string>
-  <string name="StickersInfo">"אמנים מוזמנים להוסיף חבילות מדבקות משל עצמם על ידי שימוש ברובוט @stickers.\n\nמשתמשים יוכלו להוסיף אותם על ידי לחיצה עליהם ובחירה ב \"הוסף למדבקות\"."</string>
+  <string name="StickersName">מדבקות</string>
   <string name="AddStickers">הוסף מדבקות</string>
   <string name="AddToStickers">הוסף למדבקות</string>
   <string name="AddStickersNotFound">לא נמצאו מדבקות</string>
   <string name="StickersRemove">הסר</string>
   <string name="AddStickersInstalled">מדבקות חדשות נוספו</string>
   <string name="StickersHide">הסתר</string>
-  <string name="StickersShow">הצג</string>
   <string name="StickersShare">שתף</string>
   <string name="StickersCopy">העתק קישור</string>
   <string name="StickersRemoved">מדבקות הוסרו</string>
   <string name="NoStickers">אין מדבקות עדיין</string>
-  <string name="TooMuchStickersets">מצטערים, הגעת למספר המקסימלי של חבילות מדבקות מוגדרות.</string>
   <!--settings view-->
   <string name="ResetNotificationsText">אפס את כל הגדרות ההתראות לברירת המחדל</string>
   <string name="TextSize">גודל טקסט בהודעות</string>
@@ -465,7 +455,6 @@
   <string name="Enabled">פעיל</string>
   <string name="Disabled">לא פעיל</string>
   <string name="NotificationsService">שירות התראות</string>
-  <string name="NotificationsServiceDisableInfo">אם שירותי החנות של גוגל מספיקים עבורך לקבלת התראות, אתה יכול לכבות את שירות ההתראות. אך אנו ממליצים להשאיר את זה פעיל כדי שהתוכנה תעבוד ברקע ותספק לך התראות מיידיות.</string>
   <string name="SortBy">מיין לפי</string>
   <string name="ImportContacts">ייבא אנשי קשר</string>
   <string name="SortFirstName">שם פרטי</string>
@@ -479,8 +468,7 @@
   <string name="BadgeNumber">מספר הודעות בסמל</string>
   <string name="Short">קצר</string>
   <string name="Long">ארוך</string>
-  <string name="SystemDefault">ברירת מחדל של המערכת</string>
-  <string name="SettingsDefault">הגדרות ברירת מחדל</string>
+
   <string name="AutomaticMediaDownload">הורדת מדיה אוטומטית</string>
   <string name="WhenUsingMobileData">בעת שימוש בחיבור סלולרי</string>
   <string name="WhenConnectedOnWiFi">בעת חיבור לרשת אלחוטית</string>
@@ -514,14 +502,11 @@
   <string name="SmartNotifications">התראות חכמות</string>
   <string name="SmartNotificationsDisabled">כבוי</string>
   <string name="SmartNotificationsInfo">נשמע הרבה %1$s בתוך %2$s</string>
-  <string name="SmartNotificationsMinutes">דקות</string>
-  <string name="SmartNotificationsTimes">פעמים</string>
-  <string name="SmartNotificationsWithin">בתוך</string>
-  <string name="SmartNotificationsSoundAtMost">נשמע הרבה</string>
+
   <string name="SecretWebPage">תצוגת קישורים מוקדמת</string>
   <string name="SecretChat">שיחה סודית</string>
   <!--cache view-->
-  <string name="CacheSettings">הגדרות מטמון</string>
+
   <string name="LocalDatabase">מסד נתונים מקומי</string>
   <string name="LocalDatabaseClear">למחוק מטמון הודעות טקסט?</string>
   <string name="LocalDatabaseInfo">מחיקת המטמון המקומי ימחק את הודעות הטקסט מהמטמון ויקטין את מסד הנתונים המקומי כדי לחסוך שטח אחסון. טלגרם צריכה נתונים מסויימים כדי לעבוד, ולכן מסד הנתונים לא יכול להיות בגודל אפס.\n\nפעולה זו יכולה לקחת כמה דקות.</string>
@@ -596,7 +581,6 @@
   <string name="Of">%1$d מתוך %2$d</string>
   <string name="Gallery">גלריה</string>
   <string name="AllPhotos">כל התמונות</string>
-  <string name="AllVideo">כל הסרטונים</string>
   <string name="NoPhotos">אין עדיין תמונות</string>
   <string name="NoVideo">אין סרטונים עדיין</string>
   <string name="PleaseDownload">הורד בבקשה תחילה את המדיה</string>
@@ -739,10 +723,7 @@
   <string name="CreateGroupError">"מצטערים, אינך יכול ליצור קבוצה עם משתמש זה בגלל הגדרות פרטיות."</string>
   <!--edit video view-->
   <string name="EditVideo">ערוך וידאו</string>
-  <string name="OriginalVideo">וידאו מקורי</string>    
-  <string name="EditedVideo">וידאו ערוך</string>
   <string name="SendingVideo">שולח וידאו...</string>
-  <string name="CompressVideo">דחוס וידאו</string>
   <!--bot-->
   <string name="Bot">רובוט</string>
   <string name="BotShare">שתף</string>
@@ -800,7 +781,6 @@
   <string name="ActionAddUserYou">un1 הוסיף אותך</string>
   <string name="ActionAddUserSelf">un1 חזר לקבוצה</string>
   <string name="ActionAddUserSelfYou">חזרת אל הקבוצה</string>
-  <string name="UnsuppotedMedia">הודעה זו אינה נתמכת בגירסת הטלגרם שלך. עדכן את התוכנה כדי לראות: http://telegram.org/update</string>
   <string name="AttachPhoto">תמונה</string>
   <string name="AttachVideo">וידאו</string>
   <string name="AttachGif">הנפשה</string>
@@ -864,28 +844,26 @@
   <string name="PermissionNoLocation">לטלגרם נדרשת הרשאה למיקום שלך כדי שתוכל לשתף אותו עם חבריך.</string>
   <string name="PermissionOpenSettings">הגדרות</string>
   <!--Intro view-->
-  <string name="Page1Title">Telegram</string>
+  <string name="Page1Title">Plus Messenger</string>
   <string name="Page2Title">מהיר</string>
   <string name="Page3Title">חינם</string>
   <string name="Page4Title">בטוח</string>
   <string name="Page5Title">מאובטח</string>
   <string name="Page6Title">מבוסס ענן</string>
-  <string name="Page7Title">פרטי</string>
   <string name="Page1Message">ברוך הבא&lt;br/>לעידן חדש של התכתבויות.</string>
   <string name="Page2Message">&lt;b>Telegram&lt;/b> מספק הודעות מהר יותר&lt;br/>יותר מכל יישום אחר.</string>
   <string name="Page3Message">&lt;b>Telegram&lt;/b> הוא חינמי לתמיד.&lt;br/>אינו מכיל מודעות. ללא דמי מנוי.</string>
   <string name="Page4Message">&lt;b>Telegram&lt;/b> אין מגבלות על הגודל&lt;br/>על המדיה והשיחות שלך.</string>
   <string name="Page5Message">&lt;b>Telegram&lt;/b> שומר את ההודעות שלך מוגנים&lt;br/>מפני התקפות האקרים.</string>
   <string name="Page6Message">&lt;b>Telegram&lt;/b> נותן לך גישה להודעות&lt;br/>שלך במספר מכשירים במקביל.</string>
-  <string name="Page7Message">&lt;b>Telegram&lt;/b> ההודעות מוצפנות&lt;br/>ובעלות יכולות השמדה עצמית</string>
   <string name="StartMessaging">התחל להתכתב</string>
   <!--plural-->
-  <string name="Online_zero">%1$d מחוברים</string>
-  <string name="Online_one">%1$d מחובר</string>
-  <string name="Online_two">%1$d מחוברים</string>
-  <string name="Online_few">%1$d מחוברים</string>
-  <string name="Online_many">%1$d מחוברים</string>
-  <string name="Online_other">%1$d מחובר</string>
+  <string name="OnlineCount_zero">%1$d מחוברים</string>
+  <string name="OnlineCount_one">%1$d מחובר</string>
+  <string name="OnlineCount_two">%1$d מחוברים</string>
+  <string name="OnlineCount_few">%1$d מחוברים</string>
+  <string name="OnlineCount_many">%1$d מחוברים</string>
+  <string name="OnlineCount_other">%1$d מחובר</string>
   <string name="Members_zero">אין משתמשים</string>
   <string name="Members_one">משתמש %1$d</string>
   <string name="Members_two">%1$d משתמשים</string>
@@ -910,12 +888,6 @@
   <string name="messages_few">%1$d הודעות</string>
   <string name="messages_many">%1$d הודעות</string>
   <string name="messages_other">%1$d הודעות</string>
-  <string name="comments_zero">%1$d תגובות</string>
-  <string name="comments_one">תגובה %1$d</string>
-  <string name="comments_two">%1$d תגובות</string>
-  <string name="comments_few">%1$d תגובות</string>
-  <string name="comments_many">%1$d תגובות</string>
-  <string name="comments_other">%1$d תגובות</string>
   <string name="items_zero">אין פריטים</string>
   <string name="items_one">פריט %1$d</string>
   <string name="items_two">%1$d פריטים</string>
@@ -1084,13 +1056,11 @@
   <string name="formatterDay24H">HH:mm</string>
   <string name="formatterDay12H">h:mm a</string>
   <string name="formatDateAtTime">%1$s ב %2$s</string>
-  <!--Telegram+--><!--
-  <string name="updatePlusText">
-חדש ב 3.6.1.2:
-
-תיקוני באגים</string>-->
-  <string name="TelegramForAndroid">פלוס מסנג\'ר לאנדרואיד</string>
-  <string name="Theming">ערכות נושא</string>
+  <!--Plus--><!--
+  <string name="updatePlusText">חדש בגירסה 3.18.0.2
+\n\n- תיקוני שגיאות ושיפורים</string>-->
+  <string name="TelegramForAndroid">טלגרם פלוס לאנדרואיד</string>
+  <string name="Theming">מחיל עיצוב</string>
   <string name="PlusSettings">הגדרות פלוס</string>
   <string name="colorHexInvalid">קוד צבע שגוי!</string>
   <string name="themeColor">צבע עיצוב</string>
@@ -1179,6 +1149,7 @@
   <string name="HeaderTitleColor">צבע טקבט כותרת</string>
   <string name="HeaderIconsColor">צבע סמלים בכותרת</string>
   <string name="HeaderTabIconColor">צבע סמל כרטיסיה</string>
+  <string name="HeaderTabUnselectedIconColor">צבע סמל כרטיסיה שלא נבחרה</string>
   <string name="HeaderTabCounterColor">צבע מספר כרטיסיה</string>
   <string name="HeaderTabCounterBGColor">צבע רקע מספר כרטיסיה</string>
   <string name="HeaderTabCounterCountChats">מנה שיחות במקום הודעות</string>
@@ -1191,7 +1162,7 @@
   <string name="HeaderTitle">טקסט כותרת</string>
   <string name="ForwardNoQuote">העבר ללא קרדיט</string>
   <string name="DisableMessageClick">בטל חלון קופץ בלחיצה</string>
-  <string name="ProfileScreen">פרופיל קבוצה/איש קשר</string>
+  <string name="ProfileScreen">פרופיל</string>
   <string name="HideBackground">הסתר רקע מותאם אישי</string>
   <string name="RLinkColor">צבע קישור ימני</string>
   <string name="LLinkColor">צבע קישור שמאלי</string>
@@ -1247,8 +1218,8 @@
   <string name="RowGradientList">החל שיפוע לרשימת רקע</string>
   <string name="Copied">%s הועתק ללוח</string>
   <string name="JoinChannel">
-
-התחבר לערוץ הרישמי של טלגרם פלוס: https://telegram.me/plusmsgr</string>
+\n\nהתחבר לערוץ הרשמי של טלגרם פלוס:</string>
+  <string name="ChannelLink">https://telegram.me/plusmsgrhe</string>
   <string name="DownloadThemes">הורד עיצובים</string>
   <string name="OfficialChannel">ערוץ רשמי</string>
   <string name="DialogsSettings">תיבות דו שיח</string>
@@ -1292,4 +1263,104 @@
   <string name="MarkAsRead">סמן כנקרא</string>
   <string name="MarkAllAsRead">סמן את הכל כנקרא</string>
   <string name="CheckStyle">בדוק עיצוב</string>
+  <string name="DirectShareToMenu">הוסף \'שיתוף מהיר\' לתפריט ההקשר</string>
+  <string name="DirectShareReplies">שיתוף מהיר במענה (למעט בערוצים)</string>
+  <string name="DirectShareShowFavsFirst">מועדפים תחילה בעת שיתוף מהיר</string>
+  <string name="ShowDateToast">הצג תאריך למעלה</string>
+  <string name="ShowEditedMark">הצג סימון על הודעות שנערכו</string>
+  <string name="Edited">נערך</string>
+  <string name="LeaveWithoutDelete">עזוב עם אפשרות לחזור</string>
+  <string name="LeaveWithoutDeleteMsg">אתה רוצה לעזוב את הקבוצה עם אפשרות לחזור?</string>
+  <string name="HideLeftGroup">הסתר הודעת \'עזב את הקבוצה\'</string>
+  <string name="HideJoinedGroup">הסתר הודעת \'התחבר לקבוצה\'</string>
+  <string name="HideBotKeyboard">הסתר מקלדת רובוט כברירת מחדל</string>
+  <string name="ReturnToThisGroup">חזור לקבוצה</string>
+  <string name="ReturnToThisGroupMsg">אם תחזור לקבוצה, לא תוכל לעזוב אותה שוב. אתה בטוח?</string>
+  <string name="Bio">אודותי</string>
+  <string name="EditBio">ערוך טקסט אודות</string>
+  <string name="InvertMessageOrder">הפוך סדר הודעות</string>
+  <string name="SearchUserOnTwitter">חפש שם משתמש בטוויטר</string>
+  <string name="ShortcutError">שגיאה בהוספת %s למסך הבית</string>
+  <string name="SaveSettings">שמור הגדרות</string>
+  <string name="SaveSettingsSum">שמור הגדרות בתיקיית \'Telegram\'</string>
+  <string name="RestoreSettings">שחזר הגדרות</string>
+  <string name="RestoreSettingsSum">שחזר הגדרות מתיקיה מקומית</string>
+  <string name="ResetSettings">אפס הגדרות</string>
+  <string name="ResetSettingsSum">הגדר הגדרות ברירת מחדל</string>
+  <string name="AlsoFavorites">גם מועדפים</string>
+  <string name="ShowPhotoQualityBar">הצג סרגל איכות תמונה</string>
+  <string name="PhotoQuality">איכות תמונות שנשלחות(%)</string>
+  <string name="Quality">איכות: %1$s%%</string>
+  <string name="MuteNewChats">השתק שיחות חדשות</string>
+  <string name="EncryptedChat">שיחה סודית</string>
+  <string name="MarkAsUnread">סמן כלא נקרא</string>
+  <string name="NameTooShort">שגיאה: השם קצר</string>
+  <string name="SelectedMsgBGColor">צבע רקע הודעה שנבחרה</string>
+  <string name="TabsToBottom">הצג כרטיסיות בתחתית</string>
+  <string name="HideSelectedTabIndicator">הסתר חיווי כרטיסיה שנבחרה</string>
+  <string name="TabsBGColor">צבע רקע כרטיסיות</string>
+  <string name="FavIndicatorColor">צבע חיווי מועדפים</string>
+  <string name="CreatorStarColor">צבע כוכב יוצר הקבוצה</string>
+  <string name="AdminStarColor">צבע כוכב מנהל</string>
+  <string name="EnableDirectReply">הפעל תגובה ישירה</string>
+  <string name="ToastNotification">התראות קופצות</string>
+  <string name="ShowOnlineToast">הצג התראת \'מחובר\'</string>
+  <string name="OnlineToastHelp">חייב להיות באנשי הקשר ומוגדר \'נראה לאחרונה\' על \'אנשי הקשר שלי\' או \'לכולם\'</string>
+  <string name="ShowOnlyIfContactFav">התראת \'מחובר\' אם מדובר באיש קשר/מועדף</string>
+  <string name="ShowOfflineToast">הצג התראת \'מנותק\'</string>
+  <string name="ShowTypingToast">הצג התראת \'מקליד\'</string>
+  <string name="ToastNotificationSize">גודל טקסט התראה</string>
+  <string name="ToastNotificationPadding">שוליים של טקסט ההתראה</string>
+  <string name="ToastNotificationToBottom">טקסט התראה בתחתית</string>
+  <string name="ToastNotificationPosition">מיקום טקסט התראה</string>
+  <string name="Left">שמאל</string>
+  <string name="Center">מרכז</string>
+  <string name="Right">ימין</string>
+  <string name="Offline">מנותק</string>
+  <string name="GoToFirstMessage">עבור להודעה הראשונה</string>
+  <string name="ShowUserMessages">הצג הודעות משתמש</string>
+  <string name="ShowUserMedia">הצג מדיה של המשתמש</string>
+  <string name="HidePinnedMsgAlert">אתה מעוניין להסתיר הודעה מוצמדת?</string>
+  <string name="ShowQuickBar">הצג סרגל מהיר</string>
+  <string name="VerticalQuickBar">סרגל מהיר אנכי</string>
+  <string name="AlwaysBackToMain">חזור תמיד למסך הראשי</string>
+  <string name="DoNotCloseQuickBar">אל תסגור את הסרגל המהיר</string>
+  <string name="HideQuickBarOnScroll">הסתר סרגל מהיר בעת גלילה</string>
+  <string name="CenterQuickBarButton">מרכז לחצנים בסרגל המהיר</string>
+  <string name="QuickBarColor">צבע סרגל מהיר</string>
+  <string name="QuickBarNamesColor">צבע שמות בסרגל המהיר</string>
+  <string name="NoChatsYet">אין עוד %s</string>
+  <string name="ShowMembersOnQuickBar">הצג משתמשים בקבוצות</string>
+  <string name="SaveToCloud">שמור בענן שלי</string>
+  <string name="MessageSaved">הודעה נשמרה בענן</string>
+  <string name="MessagesSaved">%s הודעות נשמרו בענן</string>
+  <string name="SaveToCloudQuote">צטט בעת שמירה לענן</string>
+  <string name="SwipeToReply">החלק על מנת להשיב</string>
+  <string name="HideInstantCamera">הסתר לחצן צילום מהיר</string>
+  <string name="OverrideNotificationsIfPlaying">הסתר התראות בזמן משחק</string>
+  <string name="HideStatusBar">הסתר את שורת המצב בצפיה בתמונות (אנדרואיד +4.1)</string>
+  <string name="DoNotHideStickersTab">אל תסתיר את כרטיסיית המדבקות</string>
+  <string name="GoToMessage">עבור להודעה</string>
+  <string name="Download">הורד</string>
+  <string name="EnableGoToMessage">הפעל לחצן \'עבור להודעה\'</string>
+  <string name="ChatsCounters">מוני שיחות</string>
+  <string name="Total">סך הכל</string>
+  <string name="Created">יוצר</string>
+  <string name="Administrator">מנהל</string>
+  <string name="DisableTabsScrolling">כבה גולל כרטיסיות</string>
+  <string name="SortTabs">מיין כרטיסיות</string>
+  <string name="ShowTabTitle">הצג כותרת כרטיסיה</string>
+  <string name="TabsTextSize">גודל טקסט כרטיסיות</string>
+  <string name="FitTabsToScreen">התאם כרטיסיות לגודל המסך</string>
+  <string name="TabsWarningMsg">כדי לראות כרטיסיות חייבות להיות לפחות 2 כרטיסיות גלויות</string>
+  <string name="LastAccess">גישה אחרונה:</string>
+  <string name="HideHeaderShadow">הסתר צל כותרת</string>
+  <string name="Cancelled">בוטל</string>
+  <string name="TabsScreenInfo">·הסר סימון מכל כרטיסיה כדי להסתיר אותה
+\n· לחיצה ארוכה לשינוי מיקום הכרטיסיה
+\n· אם כרטיסיית סופר קבוצות מוסתרת כל הסופר קבוצות יופיעו בכרטיסיית הקבוצות
+\n· כדי להפוך את הכרטיסיות לגלויות 2 כרטיסיות לפחות חייבות להיות מוצגות</string>
+  <string name="DoNotChangeHeaderTitle">אל תשנה את טקסט הכותרת</string>
+  <string name="Markdown">עיצוב טקסט</string>
+  <string name="LimitTabsCounter">הגבל את מספר הכרטיסיות</string>
 </resources>

@@ -3,38 +3,39 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.os.Build;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.AnimationCompat.AnimatorListenerAdapterProxy;
-import org.telegram.messenger.AnimationCompat.AnimatorSetProxy;
-import org.telegram.messenger.AnimationCompat.ObjectAnimatorProxy;
-import org.telegram.messenger.AnimationCompat.ViewProxy;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox;
-import org.telegram.ui.Components.FrameLayoutFixed;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.PhotoViewer;
 
-public class SharedPhotoVideoCell extends FrameLayoutFixed {
+public class SharedPhotoVideoCell extends FrameLayout {
 
     private PhotoVideoView[] photoVideoViews;
     private MessageObject[] messageObjects;
@@ -48,20 +49,20 @@ public class SharedPhotoVideoCell extends FrameLayoutFixed {
         boolean didLongClickItem(SharedPhotoVideoCell cell, int index, MessageObject messageObject, int a);
     }
 
-    private class PhotoVideoView extends FrameLayoutFixed {
+    private class PhotoVideoView extends FrameLayout {
 
         private BackupImageView imageView;
         private TextView videoTextView;
-        private LinearLayout videoInfoContainer;
+        private FrameLayout videoInfoContainer;
         private View selector;
         private CheckBox checkBox;
-        private FrameLayoutFixed container;
-        private AnimatorSetProxy animator;
+        private FrameLayout container;
+        private AnimatorSet animator;
 
         public PhotoVideoView(Context context) {
             super(context);
 
-            container = new FrameLayoutFixed(context);
+            container = new FrameLayout(context);
             addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
             imageView = new BackupImageView(context);
@@ -69,29 +70,27 @@ public class SharedPhotoVideoCell extends FrameLayoutFixed {
             imageView.getImageReceiver().setShouldGenerateQualityThumb(true);
             container.addView(imageView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-            videoInfoContainer = new LinearLayout(context);
-            videoInfoContainer.setOrientation(LinearLayout.HORIZONTAL);
+            videoInfoContainer = new FrameLayout(context);
             videoInfoContainer.setBackgroundResource(R.drawable.phototime);
             videoInfoContainer.setPadding(AndroidUtilities.dp(3), 0, AndroidUtilities.dp(3), 0);
-            videoInfoContainer.setGravity(Gravity.CENTER_VERTICAL);
             container.addView(videoInfoContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 16, Gravity.BOTTOM | Gravity.LEFT));
 
             ImageView imageView1 = new ImageView(context);
             imageView1.setImageResource(R.drawable.ic_video);
-            videoInfoContainer.addView(imageView1, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+            videoInfoContainer.addView(imageView1, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL));
 
             videoTextView = new TextView(context);
             videoTextView.setTextColor(0xffffffff);
             videoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-            videoTextView.setGravity(Gravity.CENTER_VERTICAL);
-            videoInfoContainer.addView(videoTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 4, 0, 0, 1));
+            videoInfoContainer.addView(videoTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 18, -0.7f, 0, 0));
 
             selector = new View(context);
-            selector.setBackgroundResource(R.drawable.list_selector);
+            selector.setBackgroundDrawable(Theme.getSelectorDrawable(false));
             addView(selector, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
             checkBox = new CheckBox(context, R.drawable.round_check2);
             checkBox.setVisibility(INVISIBLE);
+            checkBox.setColor(Theme.usePlusTheme ? Theme.defColor : Theme.getColor(Theme.key_checkbox), Theme.getColor(Theme.key_checkboxCheck));
             addView(checkBox, LayoutHelper.createFrame(22, 22, Gravity.RIGHT | Gravity.TOP, 0, 2, 2, 0));
         }
 
@@ -116,13 +115,13 @@ public class SharedPhotoVideoCell extends FrameLayoutFixed {
                 if (checked) {
                     setBackgroundColor(0xfff5f5f5);
                 }
-                animator = new AnimatorSetProxy();
-                animator.playTogether(ObjectAnimatorProxy.ofFloat(container, "scaleX", checked ? 0.85f : 1.0f),
-                        ObjectAnimatorProxy.ofFloat(container, "scaleY", checked ? 0.85f : 1.0f));
+                animator = new AnimatorSet();
+                animator.playTogether(ObjectAnimator.ofFloat(container, "scaleX", checked ? 0.85f : 1.0f),
+                        ObjectAnimator.ofFloat(container, "scaleY", checked ? 0.85f : 1.0f));
                 animator.setDuration(200);
-                animator.addListener(new AnimatorListenerAdapterProxy() {
+                animator.addListener(new AnimatorListenerAdapter() {
                     @Override
-                    public void onAnimationEnd(Object animation) {
+                    public void onAnimationEnd(Animator animation) {
                         if (animator != null && animator.equals(animation)) {
                             animator = null;
                             if (!checked) {
@@ -132,7 +131,7 @@ public class SharedPhotoVideoCell extends FrameLayoutFixed {
                     }
 
                     @Override
-                    public void onAnimationCancel(Object animation) {
+                    public void onAnimationCancel(Animator animation) {
                         if (animator != null && animator.equals(animation)) {
                             animator = null;
                         }
@@ -141,8 +140,8 @@ public class SharedPhotoVideoCell extends FrameLayoutFixed {
                 animator.start();
             } else {
                 setBackgroundColor(checked ? 0xfff5f5f5 : 0);
-                ViewProxy.setScaleX(container, checked ? 0.85f : 1.0f);
-                ViewProxy.setScaleY(container, checked ? 0.85f : 1.0f);
+                container.setScaleX(checked ? 0.85f : 1.0f);
+                container.setScaleY(checked ? 0.85f : 1.0f);
             }
         }
 
@@ -186,6 +185,12 @@ public class SharedPhotoVideoCell extends FrameLayoutFixed {
                     return false;
                 }
             });
+        }
+    }
+
+    public void updateCheckboxColor() {
+        for (int a = 0; a < 6; a++) {
+            photoVideoViews[a].checkBox.setColor(Theme.usePlusTheme ? Theme.defColor : Theme.getColor(Theme.key_checkbox), Theme.getColor(Theme.key_checkboxCheck));
         }
     }
 

@@ -3,23 +3,29 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -30,57 +36,59 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.AnimationCompat.AnimatorSetProxy;
-import org.telegram.messenger.AnimationCompat.ObjectAnimatorProxy;
-import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.ChatObject;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
-import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
-import org.telegram.messenger.Utilities;
+import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.UserObject;
+import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.query.SharedMediaQuery;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.FileLoader;
+import org.telegram.messenger.FileLog;
+import org.telegram.messenger.support.widget.LinearLayoutManager;
+import org.telegram.messenger.support.widget.RecyclerView;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.R;
+import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
+import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BackDrawable;
-import org.telegram.ui.ActionBar.BaseFragment;
-import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Adapters.BaseFragmentAdapter;
-import org.telegram.ui.Adapters.BaseSectionsAdapter;
-import org.telegram.ui.Cells.GreySectionCell;
+import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.CheckBoxCell;
+import org.telegram.ui.Cells.GraySectionCell;
 import org.telegram.ui.Cells.LoadingCell;
 import org.telegram.ui.Cells.SharedDocumentCell;
 import org.telegram.ui.Cells.SharedLinkCell;
 import org.telegram.ui.Cells.SharedMediaSectionCell;
 import org.telegram.ui.Cells.SharedPhotoVideoCell;
 import org.telegram.ui.Components.BackupImageView;
+import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.Components.EmbedBottomSheet;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.NumberTextView;
-import org.telegram.ui.Components.PlayerView;
-import org.telegram.ui.Components.SectionsListView;
-import org.telegram.ui.Components.WebFrameLayout;
+import org.telegram.ui.Components.FragmentContextView;
+import org.telegram.ui.Components.RadialProgressView;
+import org.telegram.ui.Components.RecyclerListView;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -99,17 +107,21 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
     private MediaSearchAdapter documentsSearchAdapter;
     private MediaSearchAdapter audioSearchAdapter;
     private MediaSearchAdapter linksSearchAdapter;
-    private SectionsListView listView;
+    private RecyclerListView listView;
     private LinearLayout progressView;
     private TextView emptyTextView;
+    private LinearLayoutManager layoutManager;
     private ImageView emptyImageView;
     private LinearLayout emptyView;
     private TextView dropDown;
+    private Drawable dropDownDrawable;
+    private RadialProgressView progressBar;
     private ActionBarMenuItem dropDownContainer;
     private ActionBarMenuItem searchItem;
     private NumberTextView selectedMessagesCountTextView;
     private ActionBarPopupWindow.ActionBarPopupWindowLayout popupLayout;
     private ArrayList<SharedPhotoVideoCell> cellCache = new ArrayList<>(6);
+    private FragmentContextView fragmentContextView;
 
     private boolean searchWas;
     private boolean searching;
@@ -207,7 +219,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
     private final static int forward = 3;
     private final static int delete = 4;
 
-private final static int quoteforward = 33;
+    private final static int quoteforward = 33;
 
     public MediaActivity(Bundle args) {
         super(args);
@@ -222,12 +234,6 @@ private final static int quoteforward = 33;
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.messageReceivedByServer);
         dialog_id = getArguments().getLong("dialog_id", 0);
         selectedMode = getArguments().getInt("selected_mode", 0);
-        /*SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
-        int sm = preferences.getInt("mediaSelectedMode", 0);
-        if(selectedMode == 0 && selectedMode != sm){
-            selectedMode = sm;
-        }*/
-
         for (int a = 0; a < sharedMediaData.length; a++) {
             sharedMediaData[a] = new SharedMediaData();
             sharedMediaData[a].max_id[0] = ((int)dialog_id) == 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
@@ -252,15 +258,9 @@ private final static int quoteforward = 33;
 
     @Override
     public View createView(Context context) {
-        //actionBar.setBackButtonDrawable(new BackDrawable(false));
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        Drawable d = new BackDrawable(false);
-        ((BackDrawable) d).setColor(themePrefs.getInt("chatHeaderIconsColor", 0xffffffff));
-        actionBar.setBackButtonDrawable(d);
+        actionBar.setBackButtonDrawable(new BackDrawable(false));
         actionBar.setTitle("");
         actionBar.setAllowOverlayTitle(false);
-        int def = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-        actionBar.setBackgroundColor(def);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -271,17 +271,21 @@ private final static int quoteforward = 33;
                         }
                         cantDeleteMessagesCount = 0;
                         actionBar.hideActionMode();
-                        listView.invalidateViews();
+                        int count = listView.getChildCount();
+                        for (int a = 0; a < count; a++) {
+                            View child = listView.getChildAt(a);
+                            if (child instanceof SharedDocumentCell) {
+                                ((SharedDocumentCell) child).setChecked(false, true);
+                            } else if (child instanceof SharedPhotoVideoCell) {
+                                for (int b = 0; b < 6; b++) {
+                                    ((SharedPhotoVideoCell) child).setChecked(b, false, true);
+                                }
+                            } else if (child instanceof SharedLinkCell) {
+                                ((SharedLinkCell) child).setChecked(false, true);
+                            }
+                        }
                     } else {
-                    if (Build.VERSION.SDK_INT < 11 && listView != null) {
-                        listView.setAdapter(null);
-                        listView = null;
-                        photoVideoAdapter = null;
-                        documentsAdapter = null;
-                            audioAdapter = null;
-                        linksAdapter = null;
-                    }
-                    finishFragment();
+                        finishFragment();
                     }
                 } else if (id == shared_media_item) {
                     if (selectedMode == 0) {
@@ -314,33 +318,96 @@ private final static int quoteforward = 33;
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setMessage(LocaleController.formatString("AreYouSureDeleteMessages", R.string.AreYouSureDeleteMessages, LocaleController.formatPluralString("items", selectedFiles[0].size() + selectedFiles[1].size())));
                     builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+
+                    final boolean deleteForAll[] = new boolean[1];
+                    int lower_id = (int) dialog_id;
+                    if (lower_id != 0) {
+                        TLRPC.Chat currentChat;
+                        TLRPC.User currentUser;
+                        if (lower_id > 0) {
+                            currentUser = MessagesController.getInstance().getUser(lower_id);
+                            currentChat = null;
+                        } else {
+                            currentUser = null;
+                            currentChat = MessagesController.getInstance().getChat(-lower_id);
+                        }
+                        if (currentUser != null || !ChatObject.isChannel(currentChat)) {
+                            int currentDate = ConnectionsManager.getInstance().getCurrentTime();
+                            if (currentUser != null && currentUser.id != UserConfig.getClientUserId() || currentChat != null) {
+                                boolean hasOutgoing = false;
+                                for (int a = 1; a >= 0; a--) {
+                                    int channelId = 0;
+                                    for (HashMap.Entry<Integer, MessageObject> entry : selectedFiles[a].entrySet()) {
+                                        MessageObject msg = entry.getValue();
+                                        if (msg.messageOwner.action != null) {
+                                            continue;
+                                        }
+                                        if (msg.isOut()) {
+                                            if ((currentDate - msg.messageOwner.date) <= 2 * 24 * 60 * 60) {
+                                                hasOutgoing = true;
+                                            }
+                                        } else {
+                                            hasOutgoing = false;
+                                            break;
+                                        }
+                                    }
+                                    if (hasOutgoing) {
+                                        break;
+                                    }
+                                }
+
+                                if (hasOutgoing) {
+                                    FrameLayout frameLayout = new FrameLayout(getParentActivity());
+                                    CheckBoxCell cell = new CheckBoxCell(getParentActivity(), true);
+                                    cell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
+                                    if (currentChat != null) {
+                                        cell.setText(LocaleController.getString("DeleteForAll", R.string.DeleteForAll), "", false, false);
+                                    } else {
+                                        cell.setText(LocaleController.formatString("DeleteForUser", R.string.DeleteForUser, UserObject.getFirstName(currentUser)), "", false, false);
+                                    }
+                                    cell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
+                                    frameLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.TOP | Gravity.LEFT, 0, 0, 0, 0));
+                                    cell.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            CheckBoxCell cell = (CheckBoxCell) v;
+                                            deleteForAll[0] = !deleteForAll[0];
+                                            cell.setChecked(deleteForAll[0], true);
+                                        }
+                                    });
+                                    builder.setView(frameLayout);
+                                }
+                            }
+                        }
+                    }
+
                     builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             for (int a = 1; a >= 0; a--) {
                                 ArrayList<Integer> ids = new ArrayList<>(selectedFiles[a].keySet());
-                            ArrayList<Long> random_ids = null;
-                            TLRPC.EncryptedChat currentEncryptedChat = null;
-                            int channelId = 0;
-                            if (!ids.isEmpty()) {
+                                ArrayList<Long> random_ids = null;
+                                TLRPC.EncryptedChat currentEncryptedChat = null;
+                                int channelId = 0;
+                                if (!ids.isEmpty()) {
                                     MessageObject msg = selectedFiles[a].get(ids.get(0));
-                                if (channelId == 0 && msg.messageOwner.to_id.channel_id != 0) {
-                                    channelId = msg.messageOwner.to_id.channel_id;
-                                }
-                            }
-                            if ((int) dialog_id == 0) {
-                                currentEncryptedChat = MessagesController.getInstance().getEncryptedChat((int) (dialog_id >> 32));
-                            }
-                            if (currentEncryptedChat != null) {
-                                random_ids = new ArrayList<>();
-                                    for (HashMap.Entry<Integer, MessageObject> entry : selectedFiles[a].entrySet()) {
-                                    MessageObject msg = entry.getValue();
-                                    if (msg.messageOwner.random_id != 0 && msg.type != 10) {
-                                        random_ids.add(msg.messageOwner.random_id);
+                                    if (channelId == 0 && msg.messageOwner.to_id.channel_id != 0) {
+                                        channelId = msg.messageOwner.to_id.channel_id;
                                     }
                                 }
-                            }
-                            MessagesController.getInstance().deleteMessages(ids, random_ids, currentEncryptedChat, channelId);
+                                if ((int) dialog_id == 0) {
+                                    currentEncryptedChat = MessagesController.getInstance().getEncryptedChat((int) (dialog_id >> 32));
+                                }
+                                if (currentEncryptedChat != null) {
+                                    random_ids = new ArrayList<>();
+                                    for (HashMap.Entry<Integer, MessageObject> entry : selectedFiles[a].entrySet()) {
+                                        MessageObject msg = entry.getValue();
+                                        if (msg.messageOwner.random_id != 0 && msg.type != 10) {
+                                            random_ids.add(msg.messageOwner.random_id);
+                                        }
+                                    }
+                                }
+                                MessagesController.getInstance().deleteMessages(ids, random_ids, currentEncryptedChat, channelId, deleteForAll[0]);
                                 selectedFiles[a].clear();
                             }
                             actionBar.hideActionMode();
@@ -378,12 +445,12 @@ private final static int quoteforward = 33;
                                 ArrayList<MessageObject> fmessages = new ArrayList<>();
                                 for (int a = 1; a >= 0; a--) {
                                     ArrayList<Integer> ids = new ArrayList<>(selectedFiles[a].keySet());
-                                Collections.sort(ids);
-                                for (Integer id : ids) {
-                                    if (id > 0) {
+                                    Collections.sort(ids);
+                                    for (Integer id : ids) {
+                                        if (id > 0) {
                                             fmessages.add(selectedFiles[a].get(id));
+                                        }
                                     }
-                                }
                                     selectedFiles[a].clear();
                                 }
                                 cantDeleteMessagesCount = 0;
@@ -393,7 +460,7 @@ private final static int quoteforward = 33;
 
                                 ChatActivity chatActivity = new ChatActivity(args);
                                 presentFragment(chatActivity, true);
-                                chatActivity.showReplyPanel(true, null, fmessages, null, false, false);
+                                chatActivity.showReplyPanel(true, null, fmessages, null, false);
 
                                 if (!AndroidUtilities.isTablet()) {
                                     removeSelfFromStack();
@@ -405,12 +472,6 @@ private final static int quoteforward = 33;
                     });
                     presentFragment(fragment);
                 }
-                /*SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
-                int sm = preferences.getInt("mediaSelectedMode",0);
-                if(selectedMode != sm){
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putInt("mediaSelectedMode", selectedMode).apply();
-                }*/
             }
         });
 
@@ -471,17 +532,17 @@ private final static int quoteforward = 33;
         searchItem.getSearchField().setHint(LocaleController.getString("Search", R.string.Search));
         searchItem.setVisibility(View.GONE);
 
-        dropDownContainer = new ActionBarMenuItem(context, menu, 0);
+        dropDownContainer = new ActionBarMenuItem(context, menu, 0, 0);
         dropDownContainer.setSubMenuOpenSide(1);
-        dropDownContainer.addSubItem(shared_media_item, LocaleController.getString("SharedMediaTitle", R.string.SharedMediaTitle), 0);
-        dropDownContainer.addSubItem(files_item, LocaleController.getString("DocumentsTitle", R.string.DocumentsTitle), 0);
+        dropDownContainer.addSubItem(shared_media_item, LocaleController.getString("SharedMediaTitle", R.string.SharedMediaTitle));
+        dropDownContainer.addSubItem(files_item, LocaleController.getString("DocumentsTitle", R.string.DocumentsTitle));
         if ((int) dialog_id != 0) {
-            dropDownContainer.addSubItem(links_item, LocaleController.getString("LinksTitle", R.string.LinksTitle), 0);
-            dropDownContainer.addSubItem(music_item, LocaleController.getString("AudioTitle", R.string.AudioTitle), 0);
+            dropDownContainer.addSubItem(links_item, LocaleController.getString("LinksTitle", R.string.LinksTitle));
+            dropDownContainer.addSubItem(music_item, LocaleController.getString("AudioTitle", R.string.AudioTitle));
         } else {
             TLRPC.EncryptedChat currentEncryptedChat = MessagesController.getInstance().getEncryptedChat((int) (dialog_id >> 32));
             if (currentEncryptedChat != null && AndroidUtilities.getPeerLayerVersion(currentEncryptedChat.layer) >= 46) {
-                dropDownContainer.addSubItem(music_item, LocaleController.getString("AudioTitle", R.string.AudioTitle), 0);
+                dropDownContainer.addSubItem(music_item, LocaleController.getString("AudioTitle", R.string.AudioTitle));
             }
         }
         actionBar.addView(dropDownContainer, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, AndroidUtilities.isTablet() ? 64 : 56, 0, 40, 0));
@@ -498,19 +559,21 @@ private final static int quoteforward = 33;
         dropDown.setLines(1);
         dropDown.setMaxLines(1);
         dropDown.setEllipsize(TextUtils.TruncateAt.END);
-        dropDown.setTextColor(0xffffffff);
+        dropDown.setTextColor(Theme.getColor(Theme.key_actionBarDefaultTitle));
         dropDown.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        dropDown.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_drop_down, 0);
+        dropDownDrawable = context.getResources().getDrawable(R.drawable.ic_arrow_drop_down).mutate();
+        dropDownDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultTitle), PorterDuff.Mode.MULTIPLY));
+        dropDown.setCompoundDrawablesWithIntrinsicBounds(null, null, dropDownDrawable, null);
         dropDown.setCompoundDrawablePadding(AndroidUtilities.dp(4));
         dropDown.setPadding(0, 0, AndroidUtilities.dp(10), 0);
         dropDownContainer.addView(dropDown, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 16, 0, 0, 0));
 
         final ActionBarMenu actionMode = actionBar.createActionMode();
-
+        if(Theme.usePlusTheme)actionMode.setBackgroundColor(Theme.chatHeaderColor);
         selectedMessagesCountTextView = new NumberTextView(actionMode.getContext());
         selectedMessagesCountTextView.setTextSize(18);
         selectedMessagesCountTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        selectedMessagesCountTextView.setTextColor(0xff737373);
+        selectedMessagesCountTextView.setTextColor(Theme.usePlusTheme ? Theme.chatHeaderIconsColor : Theme.getColor(Theme.key_actionBarActionModeDefaultIcon));
         selectedMessagesCountTextView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -518,13 +581,20 @@ private final static int quoteforward = 33;
             }
         });
         actionMode.addView(selectedMessagesCountTextView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1.0f, 65, 0, 0, 0));
-
+        Drawable icon;
         if ((int) dialog_id != 0) {
-            actionModeViews.add(actionMode.addItem(quoteforward, R.drawable.ic_ab_fwd_quoteforward, Theme.ACTION_BAR_MODE_SELECTOR_COLOR, null, AndroidUtilities.dp(54)));
-            actionModeViews.add(actionMode.addItem(forward, R.drawable.ic_ab_fwd_forward, Theme.ACTION_BAR_MODE_SELECTOR_COLOR, null, AndroidUtilities.dp(54)));
+            //actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.ic_ab_forward, AndroidUtilities.dp(54)));
+            icon = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_fwd_quoteforward);
+            icon.setColorFilter(Theme.chatHeaderIconsColor, PorterDuff.Mode.SRC_IN);
+            actionModeViews.add(actionMode.addItem(quoteforward, 0, Theme.chatHeaderColor, icon, AndroidUtilities.dp(54)));
+            icon = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_forward);
+            icon.setColorFilter(Theme.chatHeaderIconsColor, PorterDuff.Mode.SRC_IN);
+            actionModeViews.add(actionMode.addItem(forward, 0, Theme.chatHeaderColor, icon, AndroidUtilities.dp(54)));
         }
-        actionModeViews.add(actionMode.addItem(delete, R.drawable.ic_ab_fwd_delete, Theme.ACTION_BAR_MODE_SELECTOR_COLOR, null, AndroidUtilities.dp(54)));
-
+        //actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.ic_ab_delete, AndroidUtilities.dp(54)));
+        icon = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_delete);
+        icon.setColorFilter(Theme.chatHeaderIconsColor, PorterDuff.Mode.SRC_IN);
+        actionModeViews.add(actionMode.addItem(delete, 0, Theme.chatHeaderColor, icon, AndroidUtilities.dp(54)));
         photoVideoAdapter = new SharedPhotoVideoAdapter(context);
         documentsAdapter = new SharedDocumentsAdapter(context, 1);
         audioAdapter = new SharedDocumentsAdapter(context, 4);
@@ -536,36 +606,55 @@ private final static int quoteforward = 33;
         FrameLayout frameLayout;
         fragmentView = frameLayout = new FrameLayout(context);
 
-        listView = new SectionsListView(context);
-        listView.setDivider(null);
-        listView.setDividerHeight(0);
-        listView.setDrawSelectorOnTop(true);
+        int scrollToPositionOnRecreate = -1;
+        int scrollToOffsetOnRecreate = 0;
+        if (layoutManager != null) {
+            scrollToPositionOnRecreate = layoutManager.findFirstVisibleItemPosition();
+            if (scrollToPositionOnRecreate != layoutManager.getItemCount() - 1) {
+                RecyclerListView.Holder holder = (RecyclerListView.Holder) listView.findViewHolderForAdapterPosition(scrollToPositionOnRecreate);
+                if (holder != null) {
+                    scrollToOffsetOnRecreate = holder.itemView.getTop();
+                } else {
+                    scrollToPositionOnRecreate = -1;
+                }
+            } else {
+                scrollToPositionOnRecreate = -1;
+            }
+        }
+
+        listView = new RecyclerListView(context);
         listView.setClipToPadding(false);
+        listView.setSectionsType(2);
+        listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new RecyclerListView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, final int i, long l) {
+            public void onItemClick(View view, int position) {
                 if ((selectedMode == 1 || selectedMode == 4) && view instanceof SharedDocumentCell) {
-                    MediaActivity.this.onItemClick(i, view, ((SharedDocumentCell) view).getMessage(), 0);
+                    MediaActivity.this.onItemClick(position, view, ((SharedDocumentCell) view).getMessage(), 0);
                 } else if (selectedMode == 3 && view instanceof SharedLinkCell) {
-                    MediaActivity.this.onItemClick(i, view, ((SharedLinkCell) view).getMessage(), 0);
+                    MediaActivity.this.onItemClick(position, view, ((SharedLinkCell) view).getMessage(), 0);
                 }
             }
         });
-        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+        listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-                if (scrollState == SCROLL_STATE_TOUCH_SCROLL && searching && searchWas) {
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING && searching && searchWas) {
                     AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
                 }
-                scrolling = scrollState != SCROLL_STATE_IDLE;
+                scrolling = newState != RecyclerView.SCROLL_STATE_IDLE;
             }
 
             @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 if (searching && searchWas) {
                     return;
                 }
+                int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
+                int visibleItemCount = firstVisibleItem == RecyclerView.NO_POSITION ? 0 : Math.abs(layoutManager.findLastVisibleItemPosition() - firstVisibleItem) + 1;
+                int totalItemCount = recyclerView.getAdapter().getItemCount();
+
                 if (visibleItemCount != 0 && firstVisibleItem + visibleItemCount > totalItemCount - 2 && !sharedMediaData[selectedMode].loading) {
                     int type;
                     if (selectedMode == 0) {
@@ -589,9 +678,9 @@ private final static int quoteforward = 33;
                 }
             }
         });
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        listView.setOnItemLongClickListener(new RecyclerListView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int i, long id) {
+            public boolean onItemClick(View view, int position) {
                 if ((selectedMode == 1 || selectedMode == 4) && view instanceof SharedDocumentCell) {
                     SharedDocumentCell cell = (SharedDocumentCell) view;
                     MessageObject message = cell.getMessage();
@@ -604,6 +693,9 @@ private final static int quoteforward = 33;
                 return false;
             }
         });
+        if (scrollToPositionOnRecreate != -1) {
+            layoutManager.scrollToPositionWithOffset(scrollToPositionOnRecreate, scrollToOffsetOnRecreate);
+        }
 
         for (int a = 0; a < 6; a++) {
             cellCache.add(new SharedPhotoVideoCell(context));
@@ -613,7 +705,7 @@ private final static int quoteforward = 33;
         emptyView.setOrientation(LinearLayout.VERTICAL);
         emptyView.setGravity(Gravity.CENTER);
         emptyView.setVisibility(View.GONE);
-        emptyView.setBackgroundColor(0xfff0f0f0);
+        emptyView.setBackgroundColor(Theme.usePlusTheme ? Theme.prefBGColor : Theme.getColor(Theme.key_windowBackgroundGray));
         frameLayout.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         emptyView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -626,7 +718,7 @@ private final static int quoteforward = 33;
         emptyView.addView(emptyImageView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         emptyTextView = new TextView(context);
-        emptyTextView.setTextColor(0xff8a8a8a);
+        emptyTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         emptyTextView.setGravity(Gravity.CENTER);
         emptyTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 17);
         emptyTextView.setPadding(AndroidUtilities.dp(40), 0, AndroidUtilities.dp(40), AndroidUtilities.dp(128));
@@ -636,16 +728,16 @@ private final static int quoteforward = 33;
         progressView.setGravity(Gravity.CENTER);
         progressView.setOrientation(LinearLayout.VERTICAL);
         progressView.setVisibility(View.GONE);
-        progressView.setBackgroundColor(0xfff0f0f0);
+        progressView.setBackgroundColor(Theme.usePlusTheme ? Theme.prefBGColor : Theme.getColor(Theme.key_windowBackgroundGray));
         frameLayout.addView(progressView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        ProgressBar progressBar = new ProgressBar(context);
+        progressBar = new RadialProgressView(context);
         progressView.addView(progressBar, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
         switchToCurrentSelectedMode();
 
         if (!AndroidUtilities.isTablet()) {
-            frameLayout.addView(new PlayerView(context, this), LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 39, Gravity.TOP | Gravity.LEFT, 0, -36, 0, 0));
+            frameLayout.addView(fragmentContextView = new FragmentContextView(context, this), LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 39, Gravity.TOP | Gravity.LEFT, 0, -36, 0, 0));
         }
 
         return fragmentView;
@@ -668,19 +760,19 @@ private final static int quoteforward = 33;
                     sharedMediaData[type].addMessage(message, false, enc);
                 }
                 sharedMediaData[type].endReached[loadIndex] = (Boolean) args[5];
-                if (loadIndex == 0 && sharedMediaData[selectedMode].messages.isEmpty() && mergeDialogId != 0) {
-                    sharedMediaData[selectedMode].loading = true;
-                    SharedMediaQuery.loadMedia(mergeDialogId, 0, 50, sharedMediaData[selectedMode].max_id[1], type, true, classGuid);
+                if (loadIndex == 0 && sharedMediaData[type].endReached[loadIndex] && mergeDialogId != 0) {
+                    sharedMediaData[type].loading = true;
+                    SharedMediaQuery.loadMedia(mergeDialogId, 0, 50, sharedMediaData[type].max_id[1], type, true, classGuid);
                 }
-                if (!sharedMediaData[selectedMode].loading) {
-                if (progressView != null) {
-                    progressView.setVisibility(View.GONE);
-                }
-                if (selectedMode == type && listView != null) {
-                    if (listView.getEmptyView() == null) {
-                        listView.setEmptyView(emptyView);
+                if (!sharedMediaData[type].loading) {
+                    if (progressView != null) {
+                        progressView.setVisibility(View.GONE);
                     }
-                }
+                    if (selectedMode == type && listView != null) {
+                        if (listView.getEmptyView() == null) {
+                            listView.setEmptyView(emptyView);
+                        }
+                    }
                 }
                 scrolling = true;
                 if (selectedMode == 0 && type == 0) {
@@ -691,7 +783,7 @@ private final static int quoteforward = 33;
                     if (documentsAdapter != null) {
                         documentsAdapter.notifyDataSetChanged();
                     }
-                }  else if (selectedMode == 3 && type == 3) {
+                } else if (selectedMode == 3 && type == 3) {
                     if (linksAdapter != null) {
                         linksAdapter.notifyDataSetChanged();
                     }
@@ -701,7 +793,7 @@ private final static int quoteforward = 33;
                     }
                 }
                 if (selectedMode == 1 || selectedMode == 3 || selectedMode == 4) {
-                    searchItem.setVisibility(!sharedMediaData[selectedMode].messages.isEmpty() && !searching ? View.VISIBLE : View.GONE);
+                    searchItem.setVisibility(!sharedMediaData[type].messages.isEmpty() && !searching ? View.VISIBLE : View.GONE);
                 }
             }
         } else if (id == NotificationCenter.messagesDeleted) {
@@ -755,8 +847,9 @@ private final static int quoteforward = 33;
                 ArrayList<MessageObject> arr = (ArrayList<MessageObject>) args[1];
                 boolean enc = ((int) dialog_id) == 0;
                 boolean updated = false;
-                for (MessageObject obj : arr) {
-                    if (obj.messageOwner.media == null) {
+                for (int a = 0; a < arr.size(); a++) {
+                    MessageObject obj = arr.get(a);
+                    if (obj.messageOwner.media == null || obj.isSecretPhoto()) {
                         continue;
                     }
                     int type = SharedMediaQuery.getMediaType(obj.messageOwner);
@@ -841,6 +934,11 @@ private final static int quoteforward = 33;
     }
 
     @Override
+    public boolean scaleToFill() {
+        return false;
+    }
+
+    @Override
     public PhotoViewer.PlaceProviderObject getPlaceForPhoto(MessageObject messageObject, TLRPC.FileLocation fileLocation, int index) {
         if (messageObject == null || listView == null || selectedMode != 0) {
             return null;
@@ -862,7 +960,7 @@ private final static int quoteforward = 33;
                         imageView.getLocationInWindow(coords);
                         PhotoViewer.PlaceProviderObject object = new PhotoViewer.PlaceProviderObject();
                         object.viewX = coords[0];
-                        object.viewY = coords[1] - AndroidUtilities.statusBarHeight;
+                        object.viewY = coords[1] - (Build.VERSION.SDK_INT >= 21 ? 0 : AndroidUtilities.statusBarHeight);
                         object.parentView = listView;
                         object.imageReceiver = imageView.getImageReceiver();
                         object.thumb = object.imageReceiver.getBitmap();
@@ -882,6 +980,11 @@ private final static int quoteforward = 33;
     }
 
     @Override
+    public boolean allowCaption() {
+        return true;
+    }
+
+    @Override
     public void willSwitchFromPhoto(MessageObject messageObject, TLRPC.FileLocation fileLocation, int index) { }
 
     @Override
@@ -891,13 +994,13 @@ private final static int quoteforward = 33;
     public boolean isPhotoChecked(int index) { return false; }
 
     @Override
-    public void setPhotoChecked(int index) { }
+    public void setPhotoChecked(int index, VideoEditedInfo videoEditedInfo) { }
 
     @Override
     public boolean cancelButtonPressed() { return true; }
 
     @Override
-    public void sendButtonPressed(int index) { }
+    public void sendButtonPressed(int index, VideoEditedInfo videoEditedInfo) { }
 
     @Override
     public int getSelectedCount() { return 0; }
@@ -907,6 +1010,10 @@ private final static int quoteforward = 33;
         if (info != null && info.migrated_from_chat_id != 0) {
             mergeDialogId = -info.migrated_from_chat_id;
         }
+    }
+
+    public void setMergeDialogId(long did) {
+        mergeDialogId = did;
     }
 
     private void switchToCurrentSelectedMode() {
@@ -938,7 +1045,7 @@ private final static int quoteforward = 33;
                 if ((int) dialog_id == 0) {
                     emptyTextView.setText(LocaleController.getString("NoMediaSecret", R.string.NoMediaSecret));
                 } else {
-                emptyTextView.setText(LocaleController.getString("NoMedia", R.string.NoMedia));
+                    emptyTextView.setText(LocaleController.getString("NoMedia", R.string.NoMedia));
                 }
                 searchItem.setVisibility(View.GONE);
                 if (sharedMediaData[selectedMode].loading && sharedMediaData[selectedMode].messages.isEmpty()) {
@@ -953,13 +1060,13 @@ private final static int quoteforward = 33;
                 listView.setPadding(0, 0, 0, AndroidUtilities.dp(4));
             } else if (selectedMode == 1 || selectedMode == 4) {
                 if (selectedMode == 1) {
-                listView.setAdapter(documentsAdapter);
-                dropDown.setText(LocaleController.getString("DocumentsTitle", R.string.DocumentsTitle));
-                emptyImageView.setImageResource(R.drawable.tip2);
+                    listView.setAdapter(documentsAdapter);
+                    dropDown.setText(LocaleController.getString("DocumentsTitle", R.string.DocumentsTitle));
+                    emptyImageView.setImageResource(R.drawable.tip2);
                     if ((int) dialog_id == 0) {
                         emptyTextView.setText(LocaleController.getString("NoSharedFilesSecret", R.string.NoSharedFilesSecret));
                     } else {
-                emptyTextView.setText(LocaleController.getString("NoSharedFiles", R.string.NoSharedFiles));
+                        emptyTextView.setText(LocaleController.getString("NoSharedFiles", R.string.NoSharedFiles));
                     }
                 } else if (selectedMode == 4) {
                     listView.setAdapter(audioAdapter);
@@ -968,8 +1075,8 @@ private final static int quoteforward = 33;
                     if ((int) dialog_id == 0) {
                         emptyTextView.setText(LocaleController.getString("NoSharedAudioSecret", R.string.NoSharedAudioSecret));
                     } else {
-                    emptyTextView.setText(LocaleController.getString("NoSharedAudio", R.string.NoSharedAudio));
-                }
+                        emptyTextView.setText(LocaleController.getString("NoSharedAudio", R.string.NoSharedAudio));
+                    }
                 }
                 searchItem.setVisibility(!sharedMediaData[selectedMode].messages.isEmpty() ? View.VISIBLE : View.GONE);
                 if (!sharedMediaData[selectedMode].loading && !sharedMediaData[selectedMode].endReached[0] && sharedMediaData[selectedMode].messages.isEmpty()) {
@@ -993,7 +1100,7 @@ private final static int quoteforward = 33;
                 if ((int) dialog_id == 0) {
                     emptyTextView.setText(LocaleController.getString("NoSharedLinksSecret", R.string.NoSharedLinksSecret));
                 } else {
-                emptyTextView.setText(LocaleController.getString("NoSharedLinks", R.string.NoSharedLinks));
+                    emptyTextView.setText(LocaleController.getString("NoSharedLinks", R.string.NoSharedLinks));
                 }
                 searchItem.setVisibility(!sharedMediaData[3].messages.isEmpty() ? View.VISIBLE : View.GONE);
                 if (!sharedMediaData[selectedMode].loading && !sharedMediaData[selectedMode].endReached[0] && sharedMediaData[selectedMode].messages.isEmpty()) {
@@ -1025,18 +1132,16 @@ private final static int quoteforward = 33;
         }
         actionBar.createActionMode().getItem(delete).setVisibility(cantDeleteMessagesCount == 0 ? View.VISIBLE : View.GONE);
         selectedMessagesCountTextView.setNumber(1, false);
-        if (Build.VERSION.SDK_INT >= 11) {
-            AnimatorSetProxy animatorSet = new AnimatorSetProxy();
-            ArrayList<Object> animators = new ArrayList<>();
-            for (int i = 0; i < actionModeViews.size(); i++) {
-                View view2 = actionModeViews.get(i);
-                AndroidUtilities.clearDrawableAnimation(view2);
-                    animators.add(ObjectAnimatorProxy.ofFloat(view2, "scaleY", 0.1f, 1.0f));
-                }
-            animatorSet.playTogether(animators);
-            animatorSet.setDuration(250);
-            animatorSet.start();
+        AnimatorSet animatorSet = new AnimatorSet();
+        ArrayList<Animator> animators = new ArrayList<>();
+        for (int i = 0; i < actionModeViews.size(); i++) {
+            View view2 = actionModeViews.get(i);
+            AndroidUtilities.clearDrawableAnimation(view2);
+            animators.add(ObjectAnimator.ofFloat(view2, "scaleY", 0.1f, 1.0f));
         }
+        animatorSet.playTogether(animators);
+        animatorSet.setDuration(250);
+        animatorSet.start();
         scrolling = false;
         if (view instanceof SharedDocumentCell) {
             ((SharedDocumentCell) view).setChecked(true, true);
@@ -1061,6 +1166,9 @@ private final static int quoteforward = 33;
                     cantDeleteMessagesCount--;
                 }
             } else {
+                if (selectedFiles[0].size() + selectedFiles[1].size() >= 100) {
+                    return;
+                }
                 selectedFiles[loadIndex].put(message.getId(), message);
                 if (!message.canDeleteMessage(null)) {
                     cantDeleteMessagesCount++;
@@ -1081,108 +1189,292 @@ private final static int quoteforward = 33;
                 ((SharedLinkCell) view).setChecked(selectedFiles[loadIndex].containsKey(message.getId()), true);
             }
         } else {
-            if (selectedMode == 0) {
-                PhotoViewer.getInstance().setParentActivity(getParentActivity());
-                PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialog_id, mergeDialogId, this);
-            } else if (selectedMode == 1 || selectedMode == 4) {
-                if (view instanceof SharedDocumentCell) {
-                    SharedDocumentCell cell = (SharedDocumentCell) view;
-                    if (cell.isLoaded()) {
-                        if (message.isMusic()) {
-                            if (MediaController.getInstance().setPlaylist(sharedMediaData[selectedMode].messages, message)) {
-                                return;
-                            }
+            if(Theme.plusProfileEnableGoToMsg){
+                //
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                String title = LocaleController.getString("Message", R.string.Message);
+                ArrayList<CharSequence> items = new ArrayList<>();
+                if(selectedMode == 0 || selectedMode == 3){
+                    items.add(LocaleController.getString("Open", R.string.Open));
+                    title = selectedMode == 0 ? LocaleController.getString("SharedMedia", R.string.SharedMedia) : LocaleController.getString("ChannelLinkTitle", R.string.ChannelLinkTitle);
+                } else if (selectedMode == 1 || selectedMode == 4) {
+                    if (view instanceof SharedDocumentCell) {
+                        SharedDocumentCell cell = (SharedDocumentCell) view;
+                        if (cell.isLoaded()) {
+                            items.add(LocaleController.getString("Open", R.string.Open));
+                        } else if (!cell.isLoading()) {
+                            items.add(LocaleController.getString("Download", R.string.Download));
+                        } else {
+                            items.add(LocaleController.getString("Cancel", R.string.Cancel));
                         }
-                        File f = null;
-                        String fileName = message.messageOwner.media != null ? FileLoader.getAttachFileName(message.getDocument()) : "";
-                        if (message.messageOwner.attachPath != null && message.messageOwner.attachPath.length() != 0) {
-                            f = new File(message.messageOwner.attachPath);
-                        }
-                        if (f == null || f != null && !f.exists()) {
-                            f = FileLoader.getPathToMessage(message.messageOwner);
-                        }
-                        if (f != null && f.exists()) {
-                            String realMimeType = null;
-                            try {
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                MimeTypeMap myMime = MimeTypeMap.getSingleton();
-                                int idx = fileName.lastIndexOf('.');
-                                if (idx != -1) {
-                                    String ext = fileName.substring(idx + 1);
-                                    realMimeType = myMime.getMimeTypeFromExtension(ext.toLowerCase());
-                                    if (realMimeType == null) {
-                                        realMimeType = message.getDocument().mime_type;
-                                        if (realMimeType == null || realMimeType.length() == 0) {
-                                            realMimeType = null;
-                                        }
-                                    }
-                                    if (realMimeType != null) {
-                                        intent.setDataAndType(Uri.fromFile(f), realMimeType);
-                                    } else {
-                                        intent.setDataAndType(Uri.fromFile(f), "text/plain");
-                                    }
-                                } else {
-                                    intent.setDataAndType(Uri.fromFile(f), "text/plain");
-                                }
-                                if (realMimeType != null) {
-                                    try {
-                                        getParentActivity().startActivityForResult(intent, 500);
-                                    } catch (Exception e) {
-                                        intent.setDataAndType(Uri.fromFile(f), "text/plain");
-                                        getParentActivity().startActivityForResult(intent, 500);
-                                    }
-                                } else {
-                                    getParentActivity().startActivityForResult(intent, 500);
-                                }
-                            } catch (Exception e) {
-                                if (getParentActivity() == null) {
-                                    return;
-                                }
-                                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
-                                builder.setMessage(LocaleController.formatString("NoHandleAppInstalled", R.string.NoHandleAppInstalled, message.getDocument().mime_type));
-                                showDialog(builder.create());
-                            }
-                        }
-                    } else if (!cell.isLoading()) {
-                        FileLoader.getInstance().loadFile(cell.getMessage().getDocument(), false, false);
-                        cell.updateFileExistIcon();
-                    } else {
-                        FileLoader.getInstance().cancelLoadFile(cell.getMessage().getDocument());
-                        cell.updateFileExistIcon();
                     }
                 }
-            } else if (selectedMode == 3) {
-                try {
-                    TLRPC.WebPage webPage = message.messageOwner.media.webpage;
-                    String link = null;
-                    if (webPage != null && !(webPage instanceof TLRPC.TL_webPageEmpty)) {
-                        if (Build.VERSION.SDK_INT >= 16 && webPage.embed_url != null && webPage.embed_url.length() != 0) {
-                            openWebView(webPage);
-                            return;
-                        } else {
-                            link = webPage.url;
+
+                items.add(LocaleController.getString("GoToMessage", R.string.GoToMessage));
+                final View v = view;
+                final MessageObject msg = message;
+                final int indx = index;
+                final int id = message.getId();
+                final CharSequence[] finalItems = items.toArray(new CharSequence[items.size()]);
+                builder.setItems(finalItems, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+                        if (which == 0) {
+                            processClick(indx, v, msg);
+                        } else if (which == 1) {
+                            goToMessage(id);
                         }
                     }
-                    if (link == null) {
-                        link = ((SharedLinkCell) view).getLink(0);
+                });
+
+                if(message.messageOwner.media != null && message.type != 13) {
+                    String name = FileLoader.getDocumentFileName(message.messageOwner.media.document).replace("\n", " ");
+                    if (name.length() > 1) {
+                        if(name.length() > 20)name = name.substring(0, 20) + "..." + name.substring(name.length() - 3, name.length());
+                        title = name;
                     }
-                    if (link != null) {
-                        Browser.openUrl(getParentActivity(), link);
+                }
+                if (message.isFromUser()) {
+                    TLRPC.User user = MessagesController.getInstance().getUser(message.messageOwner.from_id);
+                    if (user != null) {
+                        title = title + "  [" + UserObject.getUserName(user) + "]";
                     }
-                } catch (Exception e) {
-                    FileLog.e("tmessages", e);
+                }
+                builder.setTitle(title);
+                Dialog dlg = showDialog(builder.create());
+            } else {
+                if (selectedMode == 0) {
+                    PhotoViewer.getInstance().setParentActivity(getParentActivity());
+                    PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialog_id, mergeDialogId, this);
+                } else if (selectedMode == 1 || selectedMode == 4) {
+                    if (view instanceof SharedDocumentCell) {
+                        SharedDocumentCell cell = (SharedDocumentCell) view;
+                        if (cell.isLoaded()) {
+                            if (message.isMusic()) {
+                                if (MediaController.getInstance().setPlaylist(sharedMediaData[selectedMode].messages, message)) {
+                                    return;
+                                }
+                            }
+                            File f = null;
+                            String fileName = message.messageOwner.media != null ? FileLoader.getAttachFileName(message.getDocument()) : "";
+                            if (message.messageOwner.attachPath != null && message.messageOwner.attachPath.length() != 0) {
+                                f = new File(message.messageOwner.attachPath);
+                            }
+                            if (f == null || f != null && !f.exists()) {
+                                f = FileLoader.getPathToMessage(message.messageOwner);
+                            }
+                            if (f != null && f.exists()) {
+                                if (f.getName().endsWith("attheme")) {
+                                    Theme.ThemeInfo themeInfo = Theme.applyThemeFile(f, message.getDocumentName(), true);
+                                    if (themeInfo != null) {
+                                        presentFragment(new ThemePreviewActivity(f, themeInfo));
+                                    } else {
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                                        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                                        builder.setMessage(LocaleController.getString("IncorrectTheme", R.string.IncorrectTheme));
+                                        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                                        showDialog(builder.create());
+                                    }
+                                } else {
+                                    String realMimeType = null;
+                                    try {
+                                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                        MimeTypeMap myMime = MimeTypeMap.getSingleton();
+                                        int idx = fileName.lastIndexOf('.');
+                                        if (idx != -1) {
+                                            String ext = fileName.substring(idx + 1);
+                                            realMimeType = myMime.getMimeTypeFromExtension(ext.toLowerCase());
+                                            if (realMimeType == null) {
+                                                realMimeType = message.getDocument().mime_type;
+                                                if (realMimeType == null || realMimeType.length() == 0) {
+                                                    realMimeType = null;
+                                                }
+                                            }
+                                        }
+                                        if (Build.VERSION.SDK_INT >= 24) {
+                                            intent.setDataAndType(FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", f), realMimeType != null ? realMimeType : "text/plain");
+                                        } else {
+                                            intent.setDataAndType(Uri.fromFile(f), realMimeType != null ? realMimeType : "text/plain");
+                                        }
+                                        if (realMimeType != null) {
+                                            try {
+                                                getParentActivity().startActivityForResult(intent, 500);
+                                            } catch (Exception e) {
+                                                if (Build.VERSION.SDK_INT >= 24) {
+                                                    intent.setDataAndType(FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", f), "text/plain");
+                                                } else {
+                                                    intent.setDataAndType(Uri.fromFile(f), "text/plain");
+                                                }
+                                                getParentActivity().startActivityForResult(intent, 500);
+                                            }
+                                        } else {
+                                            getParentActivity().startActivityForResult(intent, 500);
+                                        }
+                                    } catch (Exception e) {
+                                        if (getParentActivity() == null) {
+                                            return;
+                                        }
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                                        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                                        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                                        builder.setMessage(LocaleController.formatString("NoHandleAppInstalled", R.string.NoHandleAppInstalled, message.getDocument().mime_type));
+                                        showDialog(builder.create());
+                                    }
+                                }
+                            }
+                        } else if (!cell.isLoading()) {
+                            FileLoader.getInstance().loadFile(cell.getMessage().getDocument(), false, 0);
+                            cell.updateFileExistIcon();
+                        } else {
+                            FileLoader.getInstance().cancelLoadFile(cell.getMessage().getDocument());
+                            cell.updateFileExistIcon();
+                        }
+                    }
+                } else if (selectedMode == 3) {
+                    try {
+                        TLRPC.WebPage webPage = message.messageOwner.media.webpage;
+                        String link = null;
+                        if (webPage != null && !(webPage instanceof TLRPC.TL_webPageEmpty)) {
+                        if (webPage.embed_url != null && webPage.embed_url.length() != 0) {
+                                openWebView(webPage);
+                                return;
+                            } else {
+                                link = webPage.url;
+                            }
+                        }
+                        if (link == null) {
+                            link = ((SharedLinkCell) view).getLink(0);
+                        }
+                        if (link != null) {
+                            Browser.openUrl(getParentActivity(), link);
+                        }
+                    } catch (Exception e) {
+                        FileLog.e(e);
+                    }
                 }
             }
         }
     }
+//plus
+    private void goToMessage(int id){
+        Bundle args = new Bundle();
+        int lower_part = (int) dialog_id;
+        if (lower_part != 0) {
+            if (lower_part > 0) {
+                args.putInt("user_id", lower_part);
+            } else if (lower_part < 0) {
+                args.putInt("chat_id", -lower_part);
+            }
+        } else {
+            args.putInt("enc_id", (int) (dialog_id >> 32));
+        }
+        args.putInt("message_id", id);
+        presentFragment(new ChatActivity(args));
+    }
 
+    private void processClick(int index, View view, MessageObject message){
+        if (selectedMode == 0) {
+            PhotoViewer.getInstance().setParentActivity(getParentActivity());
+            PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialog_id, mergeDialogId, this);
+        } else if (selectedMode == 1 || selectedMode == 4) {
+            if (view instanceof SharedDocumentCell) {
+                SharedDocumentCell cell = (SharedDocumentCell) view;
+                if (cell.isLoaded()) {
+                    if (message.isMusic()) {
+                        if (MediaController.getInstance().setPlaylist(sharedMediaData[selectedMode].messages, message)) {
+                            return;
+                        }
+                    }
+                    File f = null;
+                    String fileName = message.messageOwner.media != null ? FileLoader.getAttachFileName(message.getDocument()) : "";
+                    if (message.messageOwner.attachPath != null && message.messageOwner.attachPath.length() != 0) {
+                        f = new File(message.messageOwner.attachPath);
+                    }
+                    if (f == null || f != null && !f.exists()) {
+                        f = FileLoader.getPathToMessage(message.messageOwner);
+                    }
+                    if (f != null && f.exists()) {
+                        String realMimeType = null;
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            MimeTypeMap myMime = MimeTypeMap.getSingleton();
+                            int idx = fileName.lastIndexOf('.');
+                            if (idx != -1) {
+                                String ext = fileName.substring(idx + 1);
+                                realMimeType = myMime.getMimeTypeFromExtension(ext.toLowerCase());
+                                if (realMimeType == null) {
+                                    realMimeType = message.getDocument().mime_type;
+                                    if (realMimeType == null || realMimeType.length() == 0) {
+                                        realMimeType = null;
+                                    }
+                                }
+                            }
+                            if (Build.VERSION.SDK_INT >= 24) {
+                                intent.setDataAndType(FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", f), realMimeType != null ? realMimeType : "text/plain");
+                            } else {
+                                intent.setDataAndType(Uri.fromFile(f), realMimeType != null ? realMimeType : "text/plain");
+                            }
+                            if (realMimeType != null) {
+                                try {
+                                    getParentActivity().startActivityForResult(intent, 500);
+                                } catch (Exception e) {
+                                    if (Build.VERSION.SDK_INT >= 24) {
+                                        intent.setDataAndType(FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", f), "text/plain");
+                                    } else {
+                                        intent.setDataAndType(Uri.fromFile(f), "text/plain");
+                                    }
+                                    getParentActivity().startActivityForResult(intent, 500);
+                                }
+                            } else {
+                                getParentActivity().startActivityForResult(intent, 500);
+                            }
+                        } catch (Exception e) {
+                            if (getParentActivity() == null) {
+                                return;
+                            }
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                            builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                            builder.setMessage(LocaleController.formatString("NoHandleAppInstalled", R.string.NoHandleAppInstalled, message.getDocument().mime_type));
+                            showDialog(builder.create());
+                        }
+                    }
+                } else if (!cell.isLoading()) {
+                    FileLoader.getInstance().loadFile(cell.getMessage().getDocument(), false, 0);
+                    cell.updateFileExistIcon();
+                } else {
+                    FileLoader.getInstance().cancelLoadFile(cell.getMessage().getDocument());
+                    cell.updateFileExistIcon();
+                }
+            }
+        } else if (selectedMode == 3) {
+            try {
+                TLRPC.WebPage webPage = message.messageOwner.media.webpage;
+                String link = null;
+                if (webPage != null && !(webPage instanceof TLRPC.TL_webPageEmpty)) {
+                    if (Build.VERSION.SDK_INT >= 16 && webPage.embed_url != null && webPage.embed_url.length() != 0) {
+                        openWebView(webPage);
+                        return;
+                    } else {
+                        link = webPage.url;
+                    }
+                }
+                if (link == null) {
+                    link = ((SharedLinkCell) view).getLink(0);
+                }
+                if (link != null) {
+                    Browser.openUrl(getParentActivity(), link);
+                }
+            } catch (Exception e) {
+                FileLog.e("tmessages", e);
+            }
+        }
+    }
+    //
     private void openWebView(TLRPC.WebPage webPage) {
-        BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity());
-        builder.setCustomView(new WebFrameLayout(getParentActivity(), builder.create(), webPage.site_name, webPage.description, webPage.url, webPage.embed_url, webPage.embed_width, webPage.embed_height));
-        builder.setUseFullWidth(true);
-        showDialog(builder.create());
+        EmbedBottomSheet.show(getParentActivity(), webPage.site_name, webPage.description, webPage.url, webPage.embed_url, webPage.embed_width, webPage.embed_height);
     }
 
     private void fixLayoutInternal() {
@@ -1227,7 +1519,8 @@ private final static int quoteforward = 33;
         }
     }
 
-    private class SharedLinksAdapter extends BaseSectionsAdapter {
+    private class SharedLinksAdapter extends RecyclerListView.SectionsAdapter {
+
         private Context mContext;
 
         public SharedLinksAdapter(Context context) {
@@ -1240,7 +1533,7 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public boolean isRowEnabled(int section, int row) {
+        public boolean isEnabled(int section, int row) {
             return row != 0;
         }
 
@@ -1258,60 +1551,80 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public View getSectionHeaderView(int section, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = new GreySectionCell(mContext);
+        public View getSectionHeaderView(int section, View view) {
+            if (view == null) {
+                view = new GraySectionCell(mContext);
+                if(Theme.usePlusTheme) {
+                    view.setBackgroundColor(Theme.prefShadowColor);
+                    //((GraySectionCell) view).setTextColor(Theme.prefSectionColor);
+                }
             }
             if (section < sharedMediaData[3].sections.size()) {
                 String name = sharedMediaData[3].sections.get(section);
                 ArrayList<MessageObject> messageObjects = sharedMediaData[3].sectionArrays.get(name);
                 MessageObject messageObject = messageObjects.get(0);
-                ((GreySectionCell) convertView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
+                ((GraySectionCell) view).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
             }
-            return convertView;
+            return view;
         }
 
         @Override
-        public View getItemView(int section, int position, View convertView, ViewGroup parent) {
-            if (section < sharedMediaData[3].sections.size()) {
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view;
+            switch (viewType) {
+                case 0:
+                    view = new GraySectionCell(mContext);
+                    break;
+                case 1:
+                    view = new SharedLinkCell(mContext);
+                    ((SharedLinkCell) view).setDelegate(new SharedLinkCell.SharedLinkCellDelegate() {
+                        @Override
+                        public void needOpenWebView(TLRPC.WebPage webPage) {
+                            MediaActivity.this.openWebView(webPage);
+                        }
+
+                        @Override
+                        public boolean canPerformActions() {
+                            return !actionBar.isActionModeShowed();
+                        }
+                    });
+                    break;
+                case 2:
+                default:
+                    view = new LoadingCell(mContext);
+                    break;
+            }
+            return new RecyclerListView.Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(int section, int position, RecyclerView.ViewHolder holder) {
+            if (holder.getItemViewType() != 2) {
                 String name = sharedMediaData[3].sections.get(section);
                 ArrayList<MessageObject> messageObjects = sharedMediaData[3].sectionArrays.get(name);
-                if (position == 0) {
-                    if (convertView == null) {
-                        convertView = new GreySectionCell(mContext);
+                switch (holder.getItemViewType()) {
+                    case 0: {
+                        MessageObject messageObject = messageObjects.get(0);
+                        ((GraySectionCell) holder.itemView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
+                        if(Theme.usePlusTheme) {
+                            holder.itemView.setBackgroundColor(Theme.prefShadowColor);
+                            ((GraySectionCell) holder.itemView).setTextColor(Theme.prefSectionColor);
+                        }
+                        break;
                     }
-                    MessageObject messageObject = messageObjects.get(0);
-                    ((GreySectionCell) convertView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
-                } else {
-                    if (convertView == null) {
-                        convertView = new SharedLinkCell(mContext);
-                        ((SharedLinkCell) convertView).setDelegate(new SharedLinkCell.SharedLinkCellDelegate() {
-                            @Override
-                            public void needOpenWebView(TLRPC.WebPage webPage) {
-                                MediaActivity.this.openWebView(webPage);
-                            }
-
-                            @Override
-                            public boolean canPerformActions() {
-                                return !actionBar.isActionModeShowed();
-                            }
-                        });
+                    case 1: {
+                        SharedLinkCell sharedLinkCell = (SharedLinkCell) holder.itemView;
+                        MessageObject messageObject = messageObjects.get(position - 1);
+                        sharedLinkCell.setLink(messageObject, position != messageObjects.size() || section == sharedMediaData[3].sections.size() - 1 && sharedMediaData[3].loading);
+                        if (actionBar.isActionModeShowed()) {
+                            sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
+                        } else {
+                            sharedLinkCell.setChecked(false, !scrolling);
+                        }
+                        break;
                     }
-                    SharedLinkCell sharedLinkCell = (SharedLinkCell) convertView;
-                    MessageObject messageObject = messageObjects.get(position - 1);
-                    sharedLinkCell.setLink(messageObject, position != messageObjects.size() || section == sharedMediaData[3].sections.size() - 1 && sharedMediaData[3].loading);
-                    if (actionBar.isActionModeShowed()) {
-                        sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
-                    } else {
-                        sharedLinkCell.setChecked(false, !scrolling);
-                    }
-                }
-            } else {
-                if (convertView == null) {
-                    convertView = new LoadingCell(mContext);
                 }
             }
-            return convertView;
         }
 
         @Override
@@ -1327,12 +1640,17 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public int getViewTypeCount() {
-            return 3;
+        public String getLetter(int position) {
+            return null;
+        }
+
+        @Override
+        public int getPositionForScrollProgress(float progress) {
+            return 0;
         }
     }
 
-    private class SharedDocumentsAdapter extends BaseSectionsAdapter {
+    private class SharedDocumentsAdapter extends RecyclerListView.SectionsAdapter {
 
         private Context mContext;
         private int currentType;
@@ -1343,18 +1661,18 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public Object getItem(int section, int position) {
-            return null;
-        }
-
-        @Override
-        public boolean isRowEnabled(int section, int row) {
+        public boolean isEnabled(int section, int row) {
             return row != 0;
         }
 
         @Override
         public int getSectionCount() {
             return sharedMediaData[currentType].sections.size() + (sharedMediaData[currentType].sections.isEmpty() || sharedMediaData[currentType].endReached[0] && sharedMediaData[currentType].endReached[1] ? 0 : 1);
+        }
+
+        @Override
+        public Object getItem(int section, int position) {
+            return null;
         }
 
         @Override
@@ -1366,49 +1684,69 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public View getSectionHeaderView(int section, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = new GreySectionCell(mContext);
+        public View getSectionHeaderView(int section, View view) {
+            if (view == null) {
+                view = new GraySectionCell(mContext);
+                if(Theme.usePlusTheme) {
+                    view.setBackgroundColor(Theme.prefShadowColor);
+                    //((GraySectionCell) view).setTextColor(Theme.prefSectionColor);
+                }
             }
             if (section < sharedMediaData[currentType].sections.size()) {
                 String name = sharedMediaData[currentType].sections.get(section);
                 ArrayList<MessageObject> messageObjects = sharedMediaData[currentType].sectionArrays.get(name);
                 MessageObject messageObject = messageObjects.get(0);
-                ((GreySectionCell) convertView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
+                ((GraySectionCell) view).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
             }
-            return convertView;
+            return view;
         }
 
         @Override
-        public View getItemView(int section, int position, View convertView, ViewGroup parent) {
-            if (section < sharedMediaData[currentType].sections.size()) {
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view;
+            switch (viewType) {
+                case 0:
+                    view = new GraySectionCell(mContext);
+                    break;
+                case 1:
+                    view = new SharedDocumentCell(mContext);
+                    break;
+                case 2:
+                default:
+                    view = new LoadingCell(mContext);
+                    break;
+            }
+            return new RecyclerListView.Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(int section, int position, RecyclerView.ViewHolder holder) {
+            if (holder.getItemViewType() != 2) {
                 String name = sharedMediaData[currentType].sections.get(section);
                 ArrayList<MessageObject> messageObjects = sharedMediaData[currentType].sectionArrays.get(name);
-                if (position == 0) {
-                    if (convertView == null) {
-                        convertView = new GreySectionCell(mContext);
+                switch (holder.getItemViewType()) {
+                    case 0: {
+                        MessageObject messageObject = messageObjects.get(0);
+                        ((GraySectionCell) holder.itemView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
+                        if(Theme.usePlusTheme) {
+                            holder.itemView.setBackgroundColor(Theme.prefShadowColor);
+                            ((GraySectionCell) holder.itemView).setTextColor(Theme.prefSectionColor);
+                        }
+                        break;
                     }
-                    MessageObject messageObject = messageObjects.get(0);
-                    ((GreySectionCell) convertView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
-                } else {
-                    if (convertView == null) {
-                        convertView = new SharedDocumentCell(mContext);
+                    case 1: {
+                        SharedDocumentCell sharedDocumentCell = (SharedDocumentCell) holder.itemView;
+                        MessageObject messageObject = messageObjects.get(position - 1);
+                        sharedDocumentCell.setDocument(messageObject, position != messageObjects.size() || section == sharedMediaData[currentType].sections.size() - 1 && sharedMediaData[currentType].loading);
+                        if (actionBar.isActionModeShowed()) {
+                            sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
+                        } else {
+                            sharedDocumentCell.setChecked(false, !scrolling);
+                        }
+                        break;
                     }
-                    SharedDocumentCell sharedDocumentCell = (SharedDocumentCell) convertView;
-                    MessageObject messageObject = messageObjects.get(position - 1);
-                    sharedDocumentCell.setDocument(messageObject, position != messageObjects.size() || section == sharedMediaData[currentType].sections.size() - 1 && sharedMediaData[currentType].loading);
-                    if (actionBar.isActionModeShowed()) {
-                        sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
-                    } else {
-                        sharedDocumentCell.setChecked(false, !scrolling);
-                    }
-                }
-            } else {
-                if (convertView == null) {
-                    convertView = new LoadingCell(mContext);
                 }
             }
-            return convertView;
         }
 
         @Override
@@ -1424,12 +1762,18 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public int getViewTypeCount() {
-            return 3;
+        public String getLetter(int position) {
+            return null;
+        }
+
+        @Override
+        public int getPositionForScrollProgress(float progress) {
+            return 0;
         }
     }
 
-    private class SharedPhotoVideoAdapter extends BaseSectionsAdapter {
+    private class SharedPhotoVideoAdapter extends RecyclerListView.SectionsAdapter {
+
         private Context mContext;
 
         public SharedPhotoVideoAdapter(Context context) {
@@ -1442,7 +1786,7 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public boolean isRowEnabled(int section, int row) {
+        public boolean isEnabled(int section, int row) {
             return false;
         }
 
@@ -1460,80 +1804,90 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public View getSectionHeaderView(int section, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = new SharedMediaSectionCell(mContext);
-                convertView.setBackgroundColor(0xffffffff);
+        public View getSectionHeaderView(int section, View view) {
+            if (view == null) {
+                view = new SharedMediaSectionCell(mContext);
+                view.setBackgroundColor(Theme.usePlusTheme ? Theme.prefShadowColor : Theme.getColor(Theme.key_windowBackgroundWhite));
             }
             if (section < sharedMediaData[0].sections.size()) {
                 String name = sharedMediaData[0].sections.get(section);
                 ArrayList<MessageObject> messageObjects = sharedMediaData[0].sectionArrays.get(name);
                 MessageObject messageObject = messageObjects.get(0);
-                ((SharedMediaSectionCell) convertView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
+                ((SharedMediaSectionCell) view).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
             }
-            return convertView;
+            return view;
         }
 
         @Override
-        public View getItemView(int section, int position, View convertView, ViewGroup parent) {
-            if (section < sharedMediaData[0].sections.size()) {
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view;
+            switch (viewType) {
+                case 0:
+                    view = new SharedMediaSectionCell(mContext);
+                    break;
+                case 1:
+                    if (!cellCache.isEmpty()) {
+                        view = cellCache.get(0);
+                        cellCache.remove(0);
+                    } else {
+                        view = new SharedPhotoVideoCell(mContext);
+                    }
+                    SharedPhotoVideoCell cell = (SharedPhotoVideoCell) view;
+                    cell.setDelegate(new SharedPhotoVideoCell.SharedPhotoVideoCellDelegate() {
+                        @Override
+                        public void didClickItem(SharedPhotoVideoCell cell, int index, MessageObject messageObject, int a) {
+                            onItemClick(index, cell, messageObject, a);
+                        }
+
+                        @Override
+                        public boolean didLongClickItem(SharedPhotoVideoCell cell, int index, MessageObject messageObject, int a) {
+                            return onItemLongClick(messageObject, cell, a);
+                        }
+                    });
+                    break;
+                case 2:
+                default:
+                    view = new LoadingCell(mContext);
+                    break;
+            }
+            return new RecyclerListView.Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(int section, int position, RecyclerView.ViewHolder holder) {
+            if (holder.getItemViewType() != 2) {
                 String name = sharedMediaData[0].sections.get(section);
                 ArrayList<MessageObject> messageObjects = sharedMediaData[0].sectionArrays.get(name);
-                if (position == 0) {
-                    if (convertView == null) {
-                        convertView = new SharedMediaSectionCell(mContext);
+                switch (holder.getItemViewType()) {
+                    case 0: {
+                        MessageObject messageObject = messageObjects.get(0);
+                        ((SharedMediaSectionCell) holder.itemView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
+                        break;
                     }
-                    MessageObject messageObject = messageObjects.get(0);
-                    ((SharedMediaSectionCell) convertView).setText(LocaleController.getInstance().formatterMonthYear.format((long) messageObject.messageOwner.date * 1000).toUpperCase());
-                } else {
-                    SharedPhotoVideoCell cell;
-                    if (convertView == null) {
-                        if (!cellCache.isEmpty()) {
-                            convertView = cellCache.get(0);
-                            cellCache.remove(0);
-                        } else {
-                            convertView = new SharedPhotoVideoCell(mContext);
-                        }
-                        cell = (SharedPhotoVideoCell) convertView;
-                        cell.setDelegate(new SharedPhotoVideoCell.SharedPhotoVideoCellDelegate() {
-                            @Override
-                            public void didClickItem(SharedPhotoVideoCell cell, int index, MessageObject messageObject, int a) {
-                                onItemClick(index, cell, messageObject, a);
-                            }
+                    case 1: {
+                        SharedPhotoVideoCell cell = (SharedPhotoVideoCell) holder.itemView;
+                        cell.setItemsCount(columnsCount);
+                        for (int a = 0; a < columnsCount; a++) {
+                            int index = (position - 1) * columnsCount + a;
+                            if (index < messageObjects.size()) {
+                                MessageObject messageObject = messageObjects.get(index);
+                                cell.setIsFirst(position == 1);
+                                cell.setItem(a, sharedMediaData[0].messages.indexOf(messageObject), messageObject);
 
-                            @Override
-                            public boolean didLongClickItem(SharedPhotoVideoCell cell, int index, MessageObject messageObject, int a) {
-                                return onItemLongClick(messageObject, cell, a);
-                            }
-                        });
-                    } else {
-                        cell = (SharedPhotoVideoCell) convertView;
-                    }
-                    cell.setItemsCount(columnsCount);
-                    for (int a = 0; a < columnsCount; a++) {
-                        int index = (position - 1) * columnsCount + a;
-                        if (index < messageObjects.size()) {
-                            MessageObject messageObject = messageObjects.get(index);
-                            cell.setIsFirst(position == 1);
-                            cell.setItem(a, sharedMediaData[0].messages.indexOf(messageObject), messageObject);
-
-                            if (actionBar.isActionModeShowed()) {
-                                cell.setChecked(a, selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
+                                if (actionBar.isActionModeShowed()) {
+                                    cell.setChecked(a, selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
+                                } else {
+                                    cell.setChecked(a, false, !scrolling);
+                                }
                             } else {
-                                cell.setChecked(a, false, !scrolling);
+                                cell.setItem(a, index, null);
                             }
-                        } else {
-                            cell.setItem(a, index, null);
                         }
+                        cell.requestLayout();
+                        break;
                     }
-                    cell.requestLayout();
-                }
-            } else {
-                if (convertView == null) {
-                    convertView = new LoadingCell(mContext);
                 }
             }
-            return convertView;
         }
 
         @Override
@@ -1549,12 +1903,17 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public int getViewTypeCount() {
-            return 3;
+        public String getLetter(int position) {
+            return null;
+        }
+
+        @Override
+        public int getPositionForScrollProgress(float progress) {
+            return 0;
         }
     }
 
-    public class MediaSearchAdapter extends BaseFragmentAdapter {
+    public class MediaSearchAdapter extends RecyclerListView.SelectionAdapter {
         private Context mContext;
         private ArrayList<MessageObject> searchResult = new ArrayList<>();
         private Timer searchTimer;
@@ -1635,7 +1994,7 @@ private final static int quoteforward = 33;
                     searchTimer.cancel();
                 }
             } catch (Exception e) {
-                FileLog.e("tmessages", e);
+                FileLog.e(e);
             }
             if (query == null) {
                 searchResult.clear();
@@ -1649,7 +2008,7 @@ private final static int quoteforward = 33;
                             searchTimer.cancel();
                             searchTimer = null;
                         } catch (Exception e) {
-                            FileLog.e("tmessages", e);
+                            FileLog.e(e);
                         }
                         processSearch(query);
                     }
@@ -1687,7 +2046,7 @@ private final static int quoteforward = 33;
                                 String search[] = new String[1 + (search2 != null ? 1 : 0)];
                                 search[0] = search1;
                                 if (search2 != null) {
-                                    search[currentType] = search2;
+                                    search[1] = search2;
                                 }
 
                                 ArrayList<MessageObject> resultArray = new ArrayList<>();
@@ -1752,17 +2111,12 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public boolean areAllItemsEnabled() {
-            return false;
+        public boolean isEnabled(RecyclerView.ViewHolder holder) {
+            return holder.getItemViewType() != searchResult.size() + globalSearch.size();
         }
 
         @Override
-        public boolean isEnabled(int i) {
-            return i != searchResult.size() + globalSearch.size();
-        }
-
-        @Override
-        public int getCount() {
+        public int getItemCount() {
             int count = searchResult.size();
             int globalCount = globalSearch.size();
             if (globalCount != 0) {
@@ -1782,7 +2136,6 @@ private final static int quoteforward = 33;
             return false;
         }
 
-        @Override
         public MessageObject getItem(int i) {
             if (i < searchResult.size()) {
                 return searchResult.get(i);
@@ -1792,69 +2145,140 @@ private final static int quoteforward = 33;
         }
 
         @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-
-        @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view;
             if (currentType == 1 || currentType == 4) {
-                if (view == null) {
-                    view = new SharedDocumentCell(mContext);
-                }
-                SharedDocumentCell sharedDocumentCell = (SharedDocumentCell) view;
-                MessageObject messageObject = getItem(i);
-                sharedDocumentCell.setDocument(messageObject, i != getCount() - 1);
+                view = new SharedDocumentCell(mContext);
+            } else {
+                view = new SharedLinkCell(mContext);
+                ((SharedLinkCell) view).setDelegate(new SharedLinkCell.SharedLinkCellDelegate() {
+                    @Override
+                    public void needOpenWebView(TLRPC.WebPage webPage) {
+                        MediaActivity.this.openWebView(webPage);
+                    }
+
+                    @Override
+                    public boolean canPerformActions() {
+                        return !actionBar.isActionModeShowed();
+                    }
+                });
+            }
+            return new RecyclerListView.Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            if (currentType == 1 || currentType == 4) {
+                SharedDocumentCell sharedDocumentCell = (SharedDocumentCell) holder.itemView;
+                MessageObject messageObject = getItem(position);
+                sharedDocumentCell.setDocument(messageObject, position != getItemCount() - 1);
                 if (actionBar.isActionModeShowed()) {
                     sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
                 } else {
                     sharedDocumentCell.setChecked(false, !scrolling);
                 }
             } else if (currentType == 3) {
-                if (view == null) {
-                    view = new SharedLinkCell(mContext);
-                    ((SharedLinkCell) view).setDelegate(new SharedLinkCell.SharedLinkCellDelegate() {
-                        @Override
-                        public void needOpenWebView(TLRPC.WebPage webPage) {
-                            MediaActivity.this.openWebView(webPage);
-                        }
-
-                        @Override
-                        public boolean canPerformActions() {
-                            return !actionBar.isActionModeShowed();
-                        }
-                    });
-                }
-                SharedLinkCell sharedLinkCell = (SharedLinkCell) view;
-                MessageObject messageObject = getItem(i);
-                sharedLinkCell.setLink(messageObject, i != getCount() - 1);
+                SharedLinkCell sharedLinkCell = (SharedLinkCell) holder.itemView;
+                MessageObject messageObject = getItem(position);
+                sharedLinkCell.setLink(messageObject, position != getItemCount() - 1);
                 if (actionBar.isActionModeShowed()) {
                     sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].containsKey(messageObject.getId()), !scrolling);
                 } else {
                     sharedLinkCell.setChecked(false, !scrolling);
                 }
             }
-            return view;
         }
 
         @Override
         public int getItemViewType(int i) {
             return 0;
         }
+    }
 
-        @Override
-        public int getViewTypeCount() {
-            return 1;
-        }
+    @Override
+    public ThemeDescription[] getThemeDescriptions() {
+        ThemeDescription.ThemeDescriptionDelegate сellDelegate = new ThemeDescription.ThemeDescriptionDelegate() {
+            @Override
+            public void didSetColor(int color) {
+                int count = listView.getChildCount();
+                for (int a = 0; a < count; a++) {
+                    View child = listView.getChildAt(a);
+                    if (child instanceof SharedPhotoVideoCell) {
+                        ((SharedPhotoVideoCell) child).updateCheckboxColor();
+                    }
+                }
+            }
+        };
+        return new ThemeDescription[]{
+                new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundWhite),
+                new ThemeDescription(emptyView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray),
+                new ThemeDescription(progressView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray),
 
-        @Override
-        public boolean isEmpty() {
-            return searchResult.isEmpty() && globalSearch.isEmpty();
-        }
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault),
+                new ThemeDescription(listView, ThemeDescription.FLAG_LISTGLOWCOLOR, null, null, null, null, Theme.key_actionBarDefault),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_ITEMSCOLOR, null, null, null, null, Theme.key_actionBarDefaultIcon),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_TITLECOLOR, null, null, null, null, Theme.key_actionBarDefaultTitle),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SELECTORCOLOR, null, null, null, null, Theme.key_actionBarDefaultSelector),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUBACKGROUND, null, null, null, null, Theme.key_actionBarDefaultSubmenuBackground),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SUBMENUITEM, null, null, null, null, Theme.key_actionBarDefaultSubmenuItem),
+
+                new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector),
+
+                new ThemeDescription(dropDown, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_actionBarDefaultTitle),
+                new ThemeDescription(dropDown, 0, null, null, new Drawable[]{dropDownDrawable}, null, Theme.key_actionBarDefaultTitle),
+
+                new ThemeDescription(emptyView, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_emptyListPlaceholder),
+
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_AM_ITEMSCOLOR, null, null, null, null, Theme.key_actionBarActionModeDefaultIcon),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_AM_BACKGROUND, null, null, null, null, Theme.key_actionBarActionModeDefault),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_AM_TOPBACKGROUND, null, null, null, null, Theme.key_actionBarActionModeDefaultTop),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_AM_SELECTORCOLOR, null, null, null, null, Theme.key_actionBarActionModeDefaultSelector),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SEARCH, null, null, null, null, Theme.key_actionBarDefaultSearch),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SEARCHPLACEHOLDER, null, null, null, null, Theme.key_actionBarDefaultSearchPlaceholder),
+
+                new ThemeDescription(selectedMessagesCountTextView, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_actionBarActionModeDefaultIcon),
+
+                new ThemeDescription(progressBar, ThemeDescription.FLAG_PROGRESSBAR, null, null, null, null, Theme.key_progressCircle),
+
+                new ThemeDescription(emptyTextView, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteGrayText2),
+
+                new ThemeDescription(listView, 0, new Class[]{GraySectionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2),
+                new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{GraySectionCell.class}, null, null, null, Theme.key_graySection),
+
+                new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{SharedDocumentCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
+                new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{SharedDocumentCell.class}, new String[]{"dateTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3),
+                new ThemeDescription(listView, ThemeDescription.FLAG_PROGRESSBAR, new Class[]{SharedDocumentCell.class}, new String[]{"progressView"}, null, null, null, Theme.key_sharedMedia_startStopLoadIcon),
+                new ThemeDescription(listView, ThemeDescription.FLAG_IMAGECOLOR, new Class[]{SharedDocumentCell.class}, new String[]{"statusImageView"}, null, null, null, Theme.key_sharedMedia_startStopLoadIcon),
+                new ThemeDescription(listView, ThemeDescription.FLAG_CHECKBOX, new Class[]{SharedDocumentCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkbox),
+                new ThemeDescription(listView, ThemeDescription.FLAG_CHECKBOXCHECK, new Class[]{SharedDocumentCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxCheck),
+                new ThemeDescription(listView, ThemeDescription.FLAG_IMAGECOLOR, new Class[]{SharedDocumentCell.class}, new String[]{"thumbImageView"}, null, null, null, Theme.key_files_folderIcon),
+                new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{SharedDocumentCell.class}, new String[]{"extTextView"}, null, null, null, Theme.key_files_iconText),
+
+                new ThemeDescription(listView, 0, new Class[]{GraySectionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2),
+                new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{GraySectionCell.class}, null, null, null, Theme.key_graySection),
+
+                new ThemeDescription(listView, 0, new Class[]{LoadingCell.class}, new String[]{"progressBar"}, null, null, null, Theme.key_progressCircle),
+
+                new ThemeDescription(listView, ThemeDescription.FLAG_CHECKBOX, new Class[]{SharedLinkCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkbox),
+                new ThemeDescription(listView, ThemeDescription.FLAG_CHECKBOXCHECK, new Class[]{SharedLinkCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxCheck),
+                new ThemeDescription(listView, 0, new Class[]{SharedLinkCell.class}, new String[]{"titleTextPaint"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
+                new ThemeDescription(listView, 0, new Class[]{SharedLinkCell.class}, null, null, null, Theme.key_windowBackgroundWhiteLinkText),
+                new ThemeDescription(listView, 0, new Class[]{SharedLinkCell.class}, Theme.linkSelectionPaint, null, null, Theme.key_windowBackgroundWhiteLinkSelection),
+                new ThemeDescription(listView, 0, new Class[]{SharedLinkCell.class}, new String[]{"letterDrawable"}, null, null, null, Theme.key_sharedMedia_linkPlaceholderText),
+                new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{SharedLinkCell.class}, new String[]{"letterDrawable"}, null, null, null, Theme.key_sharedMedia_linkPlaceholder),
+
+                new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{SharedMediaSectionCell.class}, null, null, null, Theme.key_windowBackgroundWhite),
+                new ThemeDescription(listView, ThemeDescription.FLAG_SECTIONS, new Class[]{SharedMediaSectionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
+                new ThemeDescription(listView, 0, new Class[]{SharedMediaSectionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
+
+                new ThemeDescription(listView, ThemeDescription.FLAG_CHECKBOX, new Class[]{SharedPhotoVideoCell.class}, null, null, сellDelegate, Theme.key_checkbox),
+                new ThemeDescription(listView, ThemeDescription.FLAG_CHECKBOXCHECK, new Class[]{SharedPhotoVideoCell.class}, null, null, сellDelegate, Theme.key_checkboxCheck),
+
+                new ThemeDescription(fragmentContextView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{FragmentContextView.class}, new String[]{"frameLayout"}, null, null, null, Theme.key_inappPlayerBackground),
+                new ThemeDescription(fragmentContextView, 0, new Class[]{FragmentContextView.class}, new String[]{"playButton"}, null, null, null, Theme.key_inappPlayerPlayPause),
+                new ThemeDescription(fragmentContextView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{FragmentContextView.class}, new String[]{"titleTextView"}, null, null, null, Theme.key_inappPlayerTitle),
+                new ThemeDescription(fragmentContextView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{FragmentContextView.class}, new String[]{"frameLayout"}, null, null, null, Theme.key_inappPlayerPerformer),
+                new ThemeDescription(fragmentContextView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{FragmentContextView.class}, new String[]{"closeButton"}, null, null, null, Theme.key_inappPlayerClose),
+        };
     }
 }

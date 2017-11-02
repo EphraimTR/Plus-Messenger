@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.messenger;
@@ -22,6 +22,7 @@ import android.util.Log;
 import android.util.Xml;
 import android.widget.Toast;
 
+import org.telegram.ui.Components.Favorite;
 import org.telegram.ui.LaunchActivity;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -39,7 +40,7 @@ import java.util.regex.Pattern;
 
 public class Utilities {
 
-    public static Pattern pattern = Pattern.compile("[0-9]+");
+    public static Pattern pattern = Pattern.compile("[\\-0-9]+");
     public static SecureRandom random = new SecureRandom();
 
     public static volatile DispatchQueue stageQueue = new DispatchQueue("stageQueue");
@@ -58,11 +59,10 @@ public class Utilities {
             sUrandomIn.close();
             random.setSeed(buffer);
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
     }
 
-    public native static void loadBitmap(String path, Bitmap bitmap, int scale, int width, int height, int stride);
     public native static int pinBitmap(Bitmap bitmap);
     public native static void unpinBitmap(Bitmap bitmap);
     public native static void blurBitmap(Object bitmap, int radius, int unpin, int width, int height, int stride);
@@ -70,6 +70,8 @@ public class Utilities {
     public native static boolean loadWebpImage(Bitmap bitmap, ByteBuffer buffer, int len, BitmapFactory.Options options, boolean unpin);
     public native static int convertVideoFrame(ByteBuffer src, ByteBuffer dest, int destFormat, int width, int height, int padding, int swap);
     private native static void aesIgeEncryption(ByteBuffer buffer, byte[] key, byte[] iv, boolean encrypt, int offset, int length);
+    public native static void aesCtrDecryption(ByteBuffer buffer, byte[] key, byte[] iv, int offset, int length);
+    public native static void aesCtrDecryptionByteArray(byte[] buffer, byte[] key, byte[] iv, int offset, int length, int n);
     public native static String readlink(String path);
 
     public static void aesIgeEncryption(ByteBuffer buffer, byte[] key, byte[] iv, boolean encrypt, boolean changeIv, int offset, int length) {
@@ -88,7 +90,7 @@ public class Utilities {
                 val = Integer.parseInt(num);
             }
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
         return val;
     }
@@ -105,7 +107,7 @@ public class Utilities {
                 val = Long.parseLong(num);
             }
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
         return val;
     }
@@ -217,7 +219,7 @@ public class Utilities {
             md.update(convertme, offset, len);
             return md.digest();
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
         return new byte[20];
     }
@@ -232,7 +234,7 @@ public class Utilities {
             md.update(convertme);
             return md.digest();
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         } finally {
             convertme.limit(oldl);
             convertme.position(oldp);
@@ -254,7 +256,7 @@ public class Utilities {
             md.update(convertme, offset, len);
             return md.digest();
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
         return null;
     }
@@ -277,7 +279,7 @@ public class Utilities {
             }
             return sb.toString();
         } catch (java.security.NoSuchAlgorithmException e) {
-            FileLog.e("tmessages", e);
+            FileLog.e(e);
         }
         return null;
     }
@@ -300,7 +302,7 @@ public class Utilities {
             File f = new File (Environment.getExternalStorageDirectory(), folder);
             f.mkdirs();
             File sdF = new File(f, tName);
-            String s = getError(copyFile(dataF,sdF,true));
+            String s = getError(copyFile(dataF, sdF,true));
             if (s.equalsIgnoreCase("4")) {
                 if(toast && sdF.getName()!="")
                     Toast.makeText(context, context.getString(R.string.SavedTo, sdF.getName(), folder), Toast.LENGTH_SHORT).show();
@@ -338,7 +340,29 @@ public class Utilities {
         }
     }
 
-    static String findPrefFolder(Context context){
+    public static void saveDBToSD(Context context, String folder, String prefName, String tName, boolean toast){
+        File dataF = context.getDatabasePath(prefName);
+        if(checkSDStatus() > 1){
+            File f = new File (Environment.getExternalStorageDirectory(), folder);
+            f.mkdirs();
+            File sdF = new File(f, tName);
+            String s = getError(copyFile(dataF,sdF,true));
+            if (s.equalsIgnoreCase("4")) {
+                if(toast && sdF.getName()!="")
+                    Toast.makeText(context, context.getString(R.string.SavedTo, sdF.getName(), folder), Toast.LENGTH_SHORT).show();
+            }else if (s.contains("0")) {
+                s = context.getString(R.string.SaveErrorMsg0);
+                Toast.makeText(context,"ERROR: "+ s ,Toast.LENGTH_LONG ).show();
+            }else{
+                Toast.makeText(context,"ERROR: "+s,Toast.LENGTH_LONG ).show();
+                Toast.makeText(context,dataF.getAbsolutePath(),Toast.LENGTH_LONG ).show();
+            }
+        }else{
+            Toast.makeText(context,"ERROR: " + context.getString(R.string.NoMediaMessage) , Toast.LENGTH_LONG ).show();
+        }
+    }
+
+    public static String findPrefFolder(Context context){
         File f = context.getFilesDir();
         String appDir = f.getAbsolutePath();
         File SPDir = new File (appDir.substring(0,appDir.lastIndexOf('/')+1)+ "shared_prefs/");
@@ -350,7 +374,7 @@ public class Utilities {
         return SPDir.getAbsolutePath();
     }
 
-    static int checkSDStatus(){
+    private static int checkSDStatus(){
         int b=0;
         String s = Environment.getExternalStorageState();
         if (s.equals(Environment.MEDIA_MOUNTED))b=2;
@@ -358,7 +382,7 @@ public class Utilities {
         return b;
     }
 
-    static String getError(int i){
+    private static String getError(int i){
         String s="-1";
         if(i==0)s="0: SOURCE FILE DOESN'T EXIST";
         if(i==1)s="1: DESTINATION FILE DOESN'T EXIST";
@@ -373,7 +397,7 @@ public class Utilities {
     //2: source & dest = NULL
     //3: source = NULL
     //4: dest = NULL
-    static int copyFile(File sourceFile, File destFile, boolean save) {
+    private static int copyFile(File sourceFile, File destFile, boolean save) {
         int i=-1;
         try{
             if (!sourceFile.exists()) {
@@ -406,7 +430,7 @@ public class Utilities {
         }catch (Exception e)
         {
             System.err.println("Error saving preferences: " + e.getMessage());
-            Log.e(e.getMessage(), e.toString());
+            Log.e("Error", e.toString());
         }
         return i;
     }
@@ -442,14 +466,14 @@ public class Utilities {
                 stream = new FileOutputStream(toFile);
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 87, stream);
             } catch (Exception e) {
-                FileLog.e("tmessages", e);
+                FileLog.e( e);
             } finally {
                 try {
                     if (stream != null) {
                         stream.close();
                     }
                 } catch (Exception e) {
-                    FileLog.e("tmessages", e);
+                    FileLog.e( e);
                 }
             }
         }
@@ -467,9 +491,25 @@ public class Utilities {
 
     public static int loadPrefFromSD(Context context, String prefPath, String name){
         File dataF = new File (findPrefFolder(context), name + ".xml");
-        Log.e("Utilities","dataF " + dataF.getAbsolutePath());
+        //Log.e("Utilities","dataF " + dataF.getAbsolutePath());
         File prefFile = new File (prefPath);
-        Log.e("Utilities","prefFile " + prefFile.getAbsolutePath());
+        //Log.e("Utilities","prefFile " + prefFile.getAbsolutePath());
+        String s = getError(copyFile(prefFile, dataF, false));
+        if (!s.contains("4")) {
+            Toast.makeText(context, "ERROR: "+s+"\n"+ context.getString(R.string.restoreErrorMsg, prefFile.getAbsolutePath()), Toast.LENGTH_LONG).show();
+        }
+        return Integer.parseInt(s);
+    }
+
+    public static int loadDBFromSD(Context context, String prefPath, String name) {
+        if (Favorite.getInstance().getCount() == 0){
+            Favorite.getInstance().addFavorite(-1L);
+            Favorite.getInstance().deleteFavorite(-1L);
+        }
+        File dataF = new File (context.getDatabasePath(name).getAbsolutePath());
+        //Log.e("Utilities","dataF " + dataF.getAbsolutePath());
+        File prefFile = new File (prefPath);
+        //Log.e("Utilities","prefFile " + prefFile.getAbsolutePath());
         String s = getError(copyFile(prefFile, dataF, false));
         if (!s.contains("4")) {
             Toast.makeText(context, "ERROR: "+s+"\n"+ context.getString(R.string.restoreErrorMsg, prefFile.getAbsolutePath()), Toast.LENGTH_LONG).show();
@@ -514,7 +554,7 @@ public class Utilities {
                 return themeName;
             }
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e( e);
         }
         return "";
     }
@@ -561,7 +601,7 @@ public class Utilities {
             }
             return stringMap;
         } catch (Exception e) {
-            FileLog.e("tmessages", e);
+            FileLog.e( e);
         } finally {
             try {
                 if (stream != null) {
@@ -569,7 +609,7 @@ public class Utilities {
                     stream = null;
                 }
             } catch (Exception e) {
-                FileLog.e("tmessages", e);
+                FileLog.e( e);
             }
         }
         return null;

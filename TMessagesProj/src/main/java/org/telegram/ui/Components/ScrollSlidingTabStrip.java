@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Components;
@@ -16,16 +16,20 @@ import android.graphics.Paint.Style;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.ActionBar.Theme;
 
 public class ScrollSlidingTabStrip extends HorizontalScrollView {
 
@@ -39,12 +43,13 @@ public class ScrollSlidingTabStrip extends HorizontalScrollView {
 
     private int tabCount;
 
-    private int currentPosition = 0;
+    private int currentPosition;
 
     private Paint rectPaint;
 
     private int indicatorColor = 0xff666666;
     private int underlineColor = 0x1a000000;
+    private int indicatorHeight;
 
     private int scrollOffset = AndroidUtilities.dp(52);
     private int underlineHeight = AndroidUtilities.dp(2);
@@ -94,13 +99,44 @@ public class ScrollSlidingTabStrip extends HorizontalScrollView {
         }
     }
 
-    public void addIconTab(int resId) {
+    public TextView addIconTabWithCounter(Drawable drawable) {
+        final int position = tabCount++;
+        FrameLayout tab = new FrameLayout(getContext());
+        tab.setFocusable(true);
+        tabsContainer.addView(tab);
+
+        ImageView imageView = new ImageView(getContext());
+        imageView.setImageDrawable(drawable);
+        imageView.setScaleType(ImageView.ScaleType.CENTER);
+        tab.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                delegate.onPageSelected(position);
+            }
+        });
+        tab.addView(imageView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
+        tab.setSelected(position == currentPosition);
+
+        TextView textView = new TextView(getContext());
+        textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        textView.setTextColor(0xffffffff);
+        textView.setGravity(Gravity.CENTER);
+        textView.setBackgroundResource(R.drawable.sticker_badge);
+        if(Theme.usePlusTheme)textView.getBackground().setColorFilter(Theme.lightColor, PorterDuff.Mode.SRC_IN);
+        textView.setMinWidth(AndroidUtilities.dp(18));
+        textView.setPadding(AndroidUtilities.dp(5), 0, AndroidUtilities.dp(5), AndroidUtilities.dp(1));
+        tab.addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 18, Gravity.TOP | Gravity.LEFT, 26, 6, 0, 0));
+
+        return textView;
+    }
+
+    public void addIconTab(Drawable drawable) {
         final int position = tabCount++;
         ImageView tab = new ImageView(getContext());
         tab.setFocusable(true);
-        paintTabIcons(resId);
-        //tab.setImageResource(resId);
-        tab.setImageDrawable(getResources().getDrawable(resId));
+        tab.setImageDrawable(drawable);
         tab.setScaleType(ImageView.ScaleType.CENTER);
         tab.setOnClickListener(new OnClickListener() {
             @Override
@@ -110,13 +146,6 @@ public class ScrollSlidingTabStrip extends HorizontalScrollView {
         });
         tabsContainer.addView(tab);
         tab.setSelected(position == currentPosition);
-    }
-
-    private void paintTabIcons(int i){
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        Drawable icon = getResources().getDrawable(i);
-        int iconColor = themePrefs.getInt("chatEmojiViewTabIconColor", 0xffa8a8a8);
-        icon.setColorFilter(iconColor, PorterDuff.Mode.SRC_IN);
     }
 
     public void addStickerTab(TLRPC.Document sticker) {
@@ -193,7 +222,11 @@ public class ScrollSlidingTabStrip extends HorizontalScrollView {
         }
 
         rectPaint.setColor(indicatorColor);
-        canvas.drawRect(lineLeft, 0, lineRight, height, rectPaint);
+        if (indicatorHeight == 0) {
+            canvas.drawRect(lineLeft, 0, lineRight, height, rectPaint);
+        } else {
+            canvas.drawRect(lineLeft, height - indicatorHeight, lineRight, height, rectPaint);
+        }
     }
 
     public int getCurrentPosition() {
@@ -219,23 +252,28 @@ public class ScrollSlidingTabStrip extends HorizontalScrollView {
         invalidate();
     }
 
-    public void setIndicatorColor(int indicatorColor) {
-        this.indicatorColor = indicatorColor;
+    public void setIndicatorHeight(int value) {
+        indicatorHeight = value;
         invalidate();
     }
 
-    public void setUnderlineColor(int underlineColor) {
-        this.underlineColor = underlineColor;
+    public void setIndicatorColor(int value) {
+        indicatorColor = value;
+        invalidate();
+    }
+
+    public void setUnderlineColor(int value) {
+        underlineColor = value;
         invalidate();
     }
 
     public void setUnderlineColorResource(int resId) {
-        this.underlineColor = getResources().getColor(resId);
+        underlineColor = getResources().getColor(resId);
         invalidate();
     }
 
-    public void setUnderlineHeight(int underlineHeightPx) {
-        this.underlineHeight = underlineHeightPx;
+    public void setUnderlineHeight(int value) {
+        underlineHeight = value;
         invalidate();
     }
 }

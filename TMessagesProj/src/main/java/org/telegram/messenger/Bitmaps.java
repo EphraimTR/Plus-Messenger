@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.messenger;
@@ -110,7 +110,7 @@ public class Bitmaps {
 
     public static Bitmap createBitmap(int width, int height, Bitmap.Config config) {
         Bitmap bitmap;
-        if (Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 21) {
+        if (Build.VERSION.SDK_INT < 21) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inDither = true;
             options.inPreferredConfig = config;
@@ -180,7 +180,7 @@ public class Bitmaps {
         if (config != null) {
             switch (config) {
                 case RGB_565:
-                    newConfig = Bitmap.Config.RGB_565;
+                    newConfig = Bitmap.Config.ARGB_8888;
                     break;
                 case ALPHA_8:
                     newConfig = Bitmap.Config.ALPHA_8;
@@ -212,9 +212,7 @@ public class Bitmaps {
             }
         }
         bitmap.setDensity(source.getDensity());
-        if (Build.VERSION.SDK_INT >= 12) {
-            bitmap.setHasAlpha(source.hasAlpha());
-        }
+        bitmap.setHasAlpha(source.hasAlpha());
         if (Build.VERSION.SDK_INT >= 19) {
             bitmap.setPremultiplied(source.isPremultiplied());
         }

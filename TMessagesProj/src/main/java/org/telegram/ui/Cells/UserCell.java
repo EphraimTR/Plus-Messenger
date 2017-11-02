@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
@@ -11,6 +11,7 @@ package org.telegram.ui.Cells;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.widget.FrameLayout;
@@ -20,18 +21,22 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.UserObject;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.ActionBar.SimpleTextView;
+import org.telegram.messenger.UserConfig;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox;
 import org.telegram.ui.Components.CheckBoxSquare;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.ActionBar.SimpleTextView;
+
 public class UserCell extends FrameLayout {
 
     private BackupImageView avatarImageView;
@@ -43,18 +48,18 @@ public class UserCell extends FrameLayout {
     private ImageView adminImage;
 
     private AvatarDrawable avatarDrawable;
-    private TLObject currentObject = null;
+    private TLObject currentObject;
 
     private CharSequence currentName;
     private CharSequence currrntStatus;
     private int currentDrawable;
 
-    private String lastName = null;
-    private int lastStatus = 0;
-    private TLRPC.FileLocation lastAvatar = null;
+    private String lastName;
+    private int lastStatus;
+    private TLRPC.FileLocation lastAvatar;
 
-    private int statusColor = 0xffa8a8a8;
-    private int statusOnlineColor = AndroidUtilities.getIntDarkerColor("themeColor",0x15);//0xff3b84c0;
+    private int statusColor;
+    private int statusOnlineColor;
 
     private int nameColor = 0xff000000;
 
@@ -65,6 +70,9 @@ public class UserCell extends FrameLayout {
     public UserCell(Context context, int padding, int checkbox, boolean admin) {
         super(context);
 
+        statusColor = Theme.getColor(Theme.key_windowBackgroundWhiteGrayText);
+        statusOnlineColor = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText);
+
         avatarDrawable = new AvatarDrawable();
 
         avatarImageView = new BackupImageView(context);
@@ -72,7 +80,7 @@ public class UserCell extends FrameLayout {
         addView(avatarImageView, LayoutHelper.createFrame(48, 48, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 7 + padding, 8, LocaleController.isRTL ? 7 + padding : 0, 0));
 
         nameTextView = new SimpleTextView(context);
-        nameTextView.setTextColor(0xff212121);
+        nameTextView.setTextColor(Theme.usePlusTheme ?  Theme.profileRowTitleColor : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         nameTextView.setTextSize(17);
         nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
         addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 28 + (checkbox == 2 ? 18 : 0) : (68 + padding), 11.5f, LocaleController.isRTL ? (68 + padding) : 28 + (checkbox == 2 ? 18 : 0), 0));
@@ -88,11 +96,12 @@ public class UserCell extends FrameLayout {
         addView(imageView, LayoutHelper.createFrame(LayoutParams.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 0 : 16, 0, LocaleController.isRTL ? 16 : 0, 0));
 
         if (checkbox == 2) {
-            checkBoxBig = new CheckBoxSquare(context);
+            checkBoxBig = new CheckBoxSquare(context, false);
             addView(checkBoxBig, LayoutHelper.createFrame(18, 18, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 19 : 0, 0, LocaleController.isRTL ? 0 : 19, 0));
         } else if (checkbox == 1) {
             checkBox = new CheckBox(context, R.drawable.round_check2);
             checkBox.setVisibility(INVISIBLE);
+            checkBox.setColor(Theme.usePlusTheme ? Theme.defColor : Theme.getColor(Theme.key_checkbox), Theme.getColor(Theme.key_checkboxCheck));
             addView(checkBox, LayoutHelper.createFrame(22, 22, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 37 + padding, 38, LocaleController.isRTL ? 37 + padding : 0, 0));
         }
 
@@ -109,10 +118,16 @@ public class UserCell extends FrameLayout {
         }
         adminImage.setVisibility(value != 0 ? VISIBLE : GONE);
         nameTextView.setPadding(LocaleController.isRTL && value != 0 ? AndroidUtilities.dp(16) : 0, 0, !LocaleController.isRTL && value != 0 ? AndroidUtilities.dp(16) : 0, 0);
+        String tag = getTag() != null ? getTag().toString() : "";
+        if(Theme.usePlusTheme && tag.contains("Profile")){
+            setStatusColors(Theme.profileRowStatusColor, Theme.profileRowOnlineColor);
+        }
         if (value == 1) {
-            adminImage.setImageResource(R.drawable.admin_star);
+            setTag(Theme.key_profile_creatorIcon);
+            adminImage.setColorFilter(new PorterDuffColorFilter(Theme.usePlusTheme ? Theme.profileRowCreatorStarColor : Theme.getColor(Theme.key_profile_creatorIcon), PorterDuff.Mode.MULTIPLY));
         } else if (value == 2) {
-            adminImage.setImageResource(R.drawable.admin_star2);
+            setTag(Theme.key_profile_adminIcon);
+            adminImage.setColorFilter(new PorterDuffColorFilter(Theme.usePlusTheme ? Theme.profileRowAdminStarColor : Theme.getColor(Theme.key_profile_adminIcon), PorterDuff.Mode.MULTIPLY));
         }
     }
 
@@ -132,38 +147,37 @@ public class UserCell extends FrameLayout {
         currentDrawable = resId;
         update(0);
     }
-
+    //plus
     private void updateTheme(){
         SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
         String tag = getTag() != null ? getTag().toString() : "";
         if(tag.contains("Contacts")){
-            setStatusColors(themePrefs.getInt("contactsStatusColor", 0xffa8a8a8), themePrefs.getInt("contactsOnlineColor", AndroidUtilities.getIntDarkerColor("themeColor", 0x15)));
+            setStatusColors(themePrefs.getInt("contactsStatusColor", 0xffa8a8a8), themePrefs.getInt("contactsOnlineColor", Theme.darkColor));
             nameColor = themePrefs.getInt("contactsNameColor", 0xff212121);
             nameTextView.setTextColor(nameColor);
             nameTextView.setTextSize(themePrefs.getInt("contactsNameSize", 17));
             setStatusSize(themePrefs.getInt("contactsStatusSize", 14));
             setAvatarRadius(themePrefs.getInt("contactsAvatarRadius", 32));
-        }else if(tag.contains("Profile")){
-            setStatusColors(themePrefs.getInt("profileSummaryColor", 0xff8a8a8a), themePrefs.getInt("profileOnlineColor", AndroidUtilities.getIntDarkerColor("themeColor", -0x40)));
+        } else if(tag.contains("Profile")){
+            //setStatusColors(Theme.profileRowStatusColor, Theme.profileRowOnlineColor);
             nameColor = themePrefs.getInt("profileTitleColor", 0xff212121);
             nameTextView.setTextColor(nameColor);
             nameTextView.setTextSize(17);
             setStatusSize(14);
             //setAvatarRadius(32);
-            setAvatarRadius(themePrefs.getInt("profileRowAvatarRadius", 32));
-            int dColor = themePrefs.getInt("profileIconsColor", 0xff737373);
+            setAvatarRadius(Theme.profileRowAvatarRadius);
             if(currentDrawable != 0) {
                 Drawable d = getResources().getDrawable(currentDrawable);
-                d.setColorFilter(dColor, PorterDuff.Mode.SRC_IN);
+                d.setColorFilter(Theme.profileRowIconsColor, PorterDuff.Mode.SRC_IN);
             }
-            if(adminImage != null)adminImage.setColorFilter(dColor, PorterDuff.Mode.SRC_IN);
+            //if(adminImage != null)adminImage.setColorFilter(Theme.profileRowIconsColor, PorterDuff.Mode.SRC_IN);
         } else if(tag.contains("Pref")){
-            setStatusColors(themePrefs.getInt("prefSummaryColor", 0xff8a8a8a), AndroidUtilities.getIntDarkerColor("themeColor", -0x40));
-            nameColor = themePrefs.getInt("prefTitleColor", 0xff212121);
+            setStatusColors(Theme.prefSummaryColor, Theme.lightColor);
+            nameColor = Theme.prefTitleColor;
             nameTextView.setTextColor(nameColor);
         }
     }
-
+    //
     public void setChecked(boolean checked, boolean animated) {
         if (checkBox != null) {
         if (checkBox.getVisibility() != VISIBLE) {
@@ -194,6 +208,14 @@ public class UserCell extends FrameLayout {
         statusOnlineColor = onlineColor;
     }
 
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        if (checkBoxBig != null) {
+            checkBoxBig.invalidate();
+        }
+    }
+
     public void update(int mask) {
         if (currentObject == null) {
             return;
@@ -213,7 +235,7 @@ public class UserCell extends FrameLayout {
                 photo = currentChat.photo.photo_small;
             }
         }
-        updateTheme();
+        if(Theme.usePlusTheme)updateTheme();
         if (mask != 0) {
             boolean continueUpdate = false;
             if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0) {
@@ -273,7 +295,7 @@ public class UserCell extends FrameLayout {
         } else if (currentUser != null) {
             if (currentUser.bot) {
                 statusTextView.setTextColor(statusColor);
-                if (currentUser.bot_chat_history) {
+                if (currentUser.bot_chat_history || adminImage != null && adminImage.getVisibility() == VISIBLE) {
                     statusTextView.setText(LocaleController.getString("BotStatusRead", R.string.BotStatusRead));
                 } else {
                     statusTextView.setText(LocaleController.getString("BotStatusCantRead", R.string.BotStatusCantRead));
@@ -292,7 +314,6 @@ public class UserCell extends FrameLayout {
         if (imageView.getVisibility() == VISIBLE && currentDrawable == 0 || imageView.getVisibility() == GONE && currentDrawable != 0) {
             imageView.setVisibility(currentDrawable == 0 ? GONE : VISIBLE);
             imageView.setImageResource(currentDrawable);
-            if(currentDrawable != 0)imageView.setImageDrawable(getResources().getDrawable(currentDrawable));
         }
         //Plus
         if(curDrawable != null)imageView.setImageDrawable(curDrawable);
@@ -306,7 +327,7 @@ public class UserCell extends FrameLayout {
     public boolean hasOverlappingRendering() {
         return false;
     }
-
+    //plus
     public void setNameColor(int color) {
         nameColor = color;
     }
@@ -330,4 +351,5 @@ public class UserCell extends FrameLayout {
     public void setAvatarRadius(int value){
         radius = value;
     }
+    //
 }

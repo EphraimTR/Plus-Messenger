@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.ActionBar;
@@ -30,8 +30,7 @@ public class MenuDrawable extends Drawable {
 
     public MenuDrawable() {
         super();
-        //paint.setColor(0xffffffff);
-        paint.setColor(AndroidUtilities.getIntDef("chatsHeaderIconsColor", 0xffffffff)); //Plus
+        paint.setColor(Theme.usePlusTheme ? Theme.chatsHeaderIconsColor : 0xffffffff);
         paint.setStrokeWidth(AndroidUtilities.dp(2));
     }
 
@@ -89,7 +88,6 @@ public class MenuDrawable extends Drawable {
         canvas.drawLine(startXDiff, -startYDiff, endXDiff, -endYDiff, paint);
         canvas.drawLine(startXDiff, startYDiff, endXDiff, endYDiff, paint);
         canvas.restore();
-        paint.setColor(AndroidUtilities.getIntDef("chatsHeaderIconsColor", 0xffffffff)); //Plus
     }
 
     @Override
@@ -99,7 +97,7 @@ public class MenuDrawable extends Drawable {
 
     @Override
     public void setColorFilter(ColorFilter cf) {
-
+        paint.setColorFilter(cf);
     }
 
     @Override

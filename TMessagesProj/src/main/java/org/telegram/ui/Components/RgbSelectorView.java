@@ -25,15 +25,20 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import org.telegram.messenger.R;
 
 public class RgbSelectorView extends LinearLayout {
 
 	private SeekBar seekRed;
+	private TextView seekRedValue;
 	private SeekBar seekGreen;
+	private TextView seekGreenValue;
 	private SeekBar seekBlue;
+	private TextView seekBlueValue;
 	private SeekBar seekAlpha;
+	private TextView seekAlphaValue;
 	private ImageView imgPreview;
 	private OnColorChangedListener listener;
 	
@@ -64,20 +69,41 @@ public class RgbSelectorView extends LinearLayout {
 			}
 			
 			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress,
-					boolean fromUser) {
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				if(seekBar.getTag() != null){
+					if(seekBar.getTag().equals("R")){
+						seekRedValue.setText(String.valueOf(progress));
+					}
+					if(seekBar.getTag().equals("G")){
+						seekGreenValue.setText(String.valueOf(progress));
+					}
+					if(seekBar.getTag().equals("B")){
+						seekBlueValue.setText(String.valueOf(progress));
+					}
+					if(seekBar.getTag().equals("A")){
+						seekAlphaValue.setText(String.valueOf(progress));
+					}
+				}
 				setPreviewImage();
 				onColorChanged();
 			}
 		};
 		
 		seekRed = (SeekBar)rgbView.findViewById(R.id.color_rgb_seekRed);
+		seekRed.setTag("R");
+		seekRedValue = (TextView)findViewById(R.id.color_rgb_tvRed_value);
 		seekRed.setOnSeekBarChangeListener(listener);
 		seekGreen = (SeekBar)rgbView.findViewById(R.id.color_rgb_seekGreen);
+		seekGreen.setTag("G");
+		seekGreenValue = (TextView)findViewById(R.id.color_rgb_tvGreen_value);
 		seekGreen.setOnSeekBarChangeListener(listener);
 		seekBlue = (SeekBar)rgbView.findViewById(R.id.color_rgb_seekBlue);
+		seekBlue.setTag("B");
+		seekBlueValue = (TextView)findViewById(R.id.color_rgb_tvBlue_value);
 		seekBlue.setOnSeekBarChangeListener(listener);
 		seekAlpha = (SeekBar)rgbView.findViewById(R.id.color_rgb_seekAlpha);
+		seekAlpha.setTag("A");
+		seekAlphaValue = (TextView)findViewById(R.id.color_rgb_tvAlpha_value);
 		seekAlpha.setOnSeekBarChangeListener(listener);
 		imgPreview = (ImageView)rgbView.findViewById(R.id.color_rgb_imgpreview);
 		

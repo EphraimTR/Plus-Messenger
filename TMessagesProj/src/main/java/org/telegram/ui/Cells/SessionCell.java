@@ -3,15 +3,13 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -21,9 +19,9 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.Locale;
@@ -35,16 +33,9 @@ public class SessionCell extends FrameLayout {
     private TextView detailTextView;
     private TextView detailExTextView;
     boolean needDivider;
-    private static Paint paint;
 
     public SessionCell(Context context) {
         super(context);
-
-        if (paint == null) {
-            paint = new Paint();
-            paint.setColor(0xffd9d9d9);
-            paint.setStrokeWidth(1);
-        }
 
         LinearLayout linearLayout = new LinearLayout(context);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -52,7 +43,7 @@ public class SessionCell extends FrameLayout {
         addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 30, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 17, 11, 11, 0));
 
         nameTextView = new TextView(context);
-        nameTextView.setTextColor(0xff212121);
+        nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         nameTextView.setLines(1);
         nameTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
@@ -74,7 +65,7 @@ public class SessionCell extends FrameLayout {
         }
 
         detailTextView = new TextView(context);
-        detailTextView.setTextColor(0xff212121);
+        detailTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         detailTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         detailTextView.setLines(1);
         detailTextView.setMaxLines(1);
@@ -84,7 +75,7 @@ public class SessionCell extends FrameLayout {
         addView(detailTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 17, 36, 17, 0));
 
         detailExTextView = new TextView(context);
-        detailExTextView.setTextColor(0xff999999);
+        detailExTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
         detailExTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         detailExTextView.setLines(1);
         detailExTextView.setMaxLines(1);
@@ -96,25 +87,22 @@ public class SessionCell extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(90) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
-        setTheme();
+        super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(90) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
+        if(Theme.usePlusTheme)setTheme();
     }
 
     public void setSession(TLRPC.TL_authorization session, boolean divider) {
         needDivider = divider;
 
         nameTextView.setText(String.format(Locale.US, "%s %s", session.app_name, session.app_version));
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int defColor = preferences.getInt("themeColor", AndroidUtilities.defColor);
-        int summaryColor = preferences.getInt("prefSummaryColor", 0xff999999);
         if ((session.flags & 1) != 0) {
+            setTag(Theme.key_windowBackgroundWhiteValueText);
             onlineTextView.setText(LocaleController.getString("Online", R.string.Online));
-            //onlineTextView.setTextColor(0xff2f8cc9);
-            onlineTextView.setTextColor(defColor);
+            onlineTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteValueText));
         } else {
+            setTag(Theme.key_windowBackgroundWhiteGrayText3);
             onlineTextView.setText(LocaleController.stringForMessageListDate(session.date_active));
-            //onlineTextView.setTextColor(0xff999999);
-            onlineTextView.setTextColor(summaryColor);
+            onlineTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
         }
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -163,22 +151,17 @@ public class SessionCell extends FrameLayout {
     }
 
     private void setTheme(){
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int bgColor = preferences.getInt("prefBGColor", 0xffffffff);
-        setBackgroundColor(bgColor);
-        int divColor = preferences.getInt("prefDividerColor", 0xffd9d9d9);
-        int titleColor = preferences.getInt("prefTitleColor", 0xff212121);
-        int summaryColor = preferences.getInt("prefSummaryColor", 0xff999999);
-        nameTextView.setTextColor(titleColor);
-        detailTextView.setTextColor(titleColor);
-        detailExTextView.setTextColor(summaryColor);
-        paint.setColor(divColor);
+        setBackgroundColor(Theme.prefBGColor);
+        nameTextView.setTextColor(Theme.prefTitleColor);
+        detailTextView.setTextColor(Theme.prefTitleColor);
+        detailExTextView.setTextColor(Theme.prefSummaryColor);
+        Theme.dividerPaint.setColor(Theme.prefDividerColor);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         if (needDivider) {
-            canvas.drawLine(getPaddingLeft(), getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, paint);
+            canvas.drawLine(getPaddingLeft(), getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, Theme.dividerPaint);
         }
     }
 }

@@ -16,6 +16,8 @@
 
 package org.telegram.ui.Components;
 
+import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
@@ -32,10 +34,10 @@ import android.view.ViewConfiguration;
 import android.widget.CompoundButton;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.AnimationCompat.ObjectAnimatorProxy;
+import org.telegram.ui.ActionBar.Theme;
 
 public class Switch extends CompoundButton {
 
@@ -91,7 +93,7 @@ public class Switch extends CompoundButton {
     private int mSwitchRight;
     private int mSwitchBottom;
 
-    private ObjectAnimatorProxy mPositionAnimator;
+    private ObjectAnimator mPositionAnimator;
 
     private final Rect mTempRect = new Rect();
 
@@ -162,10 +164,6 @@ public class Switch extends CompoundButton {
         requestLayout();
     }
 
-    public void setTrackResource(int resId) {
-        setTrackDrawable(getContext().getDrawable(resId));
-    }
-
     public Drawable getTrackDrawable() {
         return mTrackDrawable;
     }
@@ -179,10 +177,6 @@ public class Switch extends CompoundButton {
             thumb.setCallback(this);
         }
         requestLayout();
-    }
-
-    public void setThumbResource(int resId) {
-        setThumbDrawable(getContext().getDrawable(resId));
     }
 
     public Drawable getThumbDrawable() {
@@ -360,7 +354,7 @@ public class Switch extends CompoundButton {
 
     private void animateThumbToCheckedState(boolean newCheckedState) {
         final float targetPosition = newCheckedState ? 1 : 0;
-        mPositionAnimator = ObjectAnimatorProxy.ofFloatProxy(this, "thumbPosition", targetPosition);
+        mPositionAnimator = ObjectAnimator.ofFloat(this, "thumbPosition", targetPosition);
         mPositionAnimator.setDuration(THUMB_ANIMATION_DURATION);
         mPositionAnimator.start();
     }
@@ -419,39 +413,47 @@ public class Switch extends CompoundButton {
             cancelPositionAnimator();
             setThumbPosition(checked ? 1 : 0);
         }
-        if(getTag() == null){
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int defColor = preferences.getInt("themeColor", AndroidUtilities.defColor);
-        int sColor = preferences.getInt("prefSectionColor", defColor);
-        int sDarkColor = AndroidUtilities.getIntAlphaColor("prefSectionColor", sColor, 0.5f);
-        int darkColor = AndroidUtilities.getIntAlphaColor("themeColor", AndroidUtilities.defColor, 0.5f);
-        int checkColor = sColor == defColor ? darkColor : sDarkColor;
+
+        int sDarkColor = AndroidUtilities.getIntAlphaColor("prefSectionColor", Theme.prefSectionColor, 0.5f);
+        int darkColor = AndroidUtilities.getIntAlphaColor("themeColor", Theme.defColor, 0.5f);
+        int checkColor = Theme.prefSectionColor == Theme.defColor ? darkColor : sDarkColor;
+
         if (mTrackDrawable != null) {
-            //mTrackDrawable.setColorFilter(new PorterDuffColorFilter(checked ? 0xffa0d6fa : 0xffc7c7c7, PorterDuff.Mode.MULTIPLY));
-            mTrackDrawable.setColorFilter(new PorterDuffColorFilter(checked ? checkColor : 0xffc7c7c7, PorterDuff.Mode.MULTIPLY));
+            mTrackDrawable.setColorFilter(new PorterDuffColorFilter(checked ? Theme.getColor(Theme.key_switchTrackChecked) : Theme.getColor(Theme.key_switchTrack), PorterDuff.Mode.MULTIPLY));
+            if(Theme.usePlusTheme)mTrackDrawable.setColorFilter(new PorterDuffColorFilter(checked ? checkColor : 0xffc7c7c7, PorterDuff.Mode.MULTIPLY));
         }
         if (mThumbDrawable != null) {
-            //mThumbDrawable.setColorFilter(new PorterDuffColorFilter(checked ? 0xff45abef : 0xffededed, PorterDuff.Mode.MULTIPLY));
-            mThumbDrawable.setColorFilter(new PorterDuffColorFilter(checked ? sColor : 0xffededed, PorterDuff.Mode.MULTIPLY));
+            mThumbDrawable.setColorFilter(new PorterDuffColorFilter(checked ? Theme.getColor(Theme.key_switchThumbChecked) : Theme.getColor(Theme.key_switchThumb), PorterDuff.Mode.MULTIPLY));
+            if(Theme.usePlusTheme)mThumbDrawable.setColorFilter(new PorterDuffColorFilter(checked ? Theme.prefSectionColor : 0xffededed, PorterDuff.Mode.MULTIPLY));
         }
-        }
+   
     }
 
+    public void checkColorFilters() {
+        if (mTrackDrawable != null) {
+            mTrackDrawable.setColorFilter(new PorterDuffColorFilter(isChecked() ? Theme.getColor(Theme.key_switchTrackChecked) : Theme.getColor(Theme.key_switchTrack), PorterDuff.Mode.MULTIPLY));
+        }
+        if (mThumbDrawable != null) {
+            mThumbDrawable.setColorFilter(new PorterDuffColorFilter(isChecked() ? Theme.getColor(Theme.key_switchThumbChecked) : Theme.getColor(Theme.key_switchThumb), PorterDuff.Mode.MULTIPLY));
+        }
+    }
+    //plus
     public void setColor(int color){
         boolean checked = isChecked();
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int defColor = preferences.getInt("themeColor", AndroidUtilities.defColor);
-        int darkColor = AndroidUtilities.getIntAlphaColor("themeColor", AndroidUtilities.defColor, 0.5f);
-        int sDarkColor = AndroidUtilities.setDarkColor(color, 0x7f);
-        int checkColor = color == defColor ? darkColor : sDarkColor;
+        //SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+        //int defColor = preferences.getInt("themeColor", AndroidUtilities.defColor);
+        int lightColor = AndroidUtilities.getIntAlphaColor(color, 0.5f);
+        //int darkColor = AndroidUtilities.getIntAlphaColor(Theme.defColor, 0.5f);
+
+        //int checkColor = color == Theme.defColor ? darkColor : sDarkColor;
         if (mTrackDrawable != null) {
-            mTrackDrawable.setColorFilter(new PorterDuffColorFilter(checked ? color : 0xffc7c7c7, PorterDuff.Mode.MULTIPLY));
+            mTrackDrawable.setColorFilter(new PorterDuffColorFilter(checked ? lightColor : 0xffc7c7c7, PorterDuff.Mode.MULTIPLY));
         }
         if (mThumbDrawable != null) {
-            mThumbDrawable.setColorFilter(new PorterDuffColorFilter(checked ? checkColor : 0xffededed, PorterDuff.Mode.MULTIPLY));
+            mThumbDrawable.setColorFilter(new PorterDuffColorFilter(checked ? color : 0xffededed, PorterDuff.Mode.MULTIPLY));
         }
     }
-
+    //
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
@@ -679,6 +681,7 @@ public class Switch extends CompoundButton {
         invalidate();
     }
 
+    @SuppressLint("NewApi")
     @Override
     public void drawableHotspotChanged(float x, float y) {
         super.drawableHotspotChanged(x, y);

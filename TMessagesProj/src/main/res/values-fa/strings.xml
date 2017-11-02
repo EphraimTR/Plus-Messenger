@@ -66,8 +66,6 @@
   <string name="Recent">اخیر</string>
   <string name="LinkPreview">پیش نمایش لینک</string>
   <!--channels-->
-  <string name="GroupType">نوع گروه</string>
-  <string name="ChannelType">نوع کانال</string>
   <string name="ChannelTypePublic">عمومی</string>
   <string name="ChannelTypePrivate">خصوصی</string>
   <string name="SetAsAdmin">مدیرش کن</string>
@@ -103,8 +101,6 @@
   <string name="NoBlockedGroup">کاربران مسدود از گروه حذف شدندو فقط اگه مدیر دعوتشون کنه می تونه دوباره عضو بشن . لینک دعوت هم براشون کار نمی کنه !</string>
   <string name="NewChannel">کانال جدید</string>
   <string name="EnterChannelName">نام کانال</string>
-  <string name="Comments">نظرات</string>
-  <string name="CommentsInfo">اگر شما نظرات رو فعال کنی، همه می تونن تو کانال در مورد پست ها  بحث کنن.</string>
   <string name="AddMutual">کسایی رو که می خوای به کانال اضافه کن</string>
   <string name="ChannelUsernameHelp">ملت می تونن این لینک رو با بقیه به اشتراک بذارن و با جستجوی تلگرام هم کانالت رو پیدا کنن .</string>
   <string name="MegaUsernameHelp">بقیه می تونن این لینک رو با به اشتراک بذارن و می تونن گروه شما رو از طریق جستجوی تلگرام هم پیدا کنن.</string>
@@ -130,11 +126,8 @@
   <string name="LeaveChannelMenu">ترک کانال</string>
   <string name="ChannelSettings">تنظیمات</string>
   <string name="ChannelJoin">منو اضافه کن</string>
-  <string name="OpenChannelProfile">اطلاعات کانال</string>
   <string name="ChannelBroadcast">سخن پراکنی</string>
   <string name="ChannelSilentBroadcast">ارسال بی صدا</string>
-  <string name="ChannelComment">نظر</string>
-  <string name="ShowDiscussion">نظرات را نشان بده</string>
   <string name="ChannelAlertTitle">کانال چیه؟</string>
   <string name="ChannelAlertText">با استفاده از کانال ها می تونی برای برای کلی مخاطب پیام بفرستی .</string>
   <string name="ChannelAlertCreate">ایجاد کانال</string>
@@ -163,9 +156,7 @@
   <string name="ActionChannelChangedPhoto">عکس کانال تغییر یافت</string>
   <string name="ActionChannelRemovedPhoto">عکس کانال حذف شد</string>
   <string name="ActionChannelChangedTitle">اسم کانال به un2 تغییر یافت</string>
-  <string name="ChannelPublicLimitReached">ببخشید،تعداد کانالای عمومی شما بیش از حد شده . شما می تونی یکی از اونا رو پاک کنی یا اینکه از کانال خصوصی استفاده کنی .</string>
   <string name="ChangePublicLimitReached">ببخشیدا، ولی تعداد لینک های عمومی شما بیش از حد زیاده. چندتایی رو حذف کن یا چندتا  گروه ها یا کانال هات رو خصوصی کن.</string>
-  <string name="ChannelModerator">مدیر</string>
   <string name="ChannelCreator">سازنده</string>
   <string name="ChannelEditor">مدیر</string>
   <string name="ChannelMute">بی صدا</string>
@@ -494,20 +485,17 @@ http://goo.gl/jnmjnZ</string>
   <string name="UsernameEmpty">هیچ کدوم</string>
   <string name="ErrorOccurred">خطایی رخ داده</string>
   <!--stickers view-->
-  <string name="Stickers">استیکرها </string>
-  <string name="StickersInfo">هنرمندان می تونن بسته های استیکرشون رو با استفاده از ربات ما  @stickers اضافه کنن.\n\n کاربران می توانند با ضربه به استیکر ها و انتخاب \"اضافه به استیکرها\" اونا رو اضافه کنن.</string>
+  <string name="StickersName">استیکرها </string>
   <string name="AddStickers">استیکر اضافه کن</string>
   <string name="AddToStickers">به استیکرها اضافه کن</string>
   <string name="AddStickersNotFound">استیکرها پیدا نشدن</string>
   <string name="StickersRemoved">استیکرها پاک شدن</string>
   <string name="AddStickersInstalled">استیکرهای جدید اضافه شدن</string>
   <string name="StickersHide">پنهان کردن</string>
-  <string name="StickersShow">نمایش دادن</string>
   <string name="StickersShare">اشتراک گذاری</string>
   <string name="StickersCopy">کپی کردن لینک</string>
   <string name="StickersRemove">پاک کردن</string>
   <string name="NoStickers">هیچ استیکری وجود نداره</string>
-  <string name="TooMuchStickersets">با عرض پوزش، شما از حداکثر تعداد استیکر استفاده کرده اید.</string>
   <!--settings view-->
   <string name="ResetNotificationsText">همه اعلان ها رو به حالت پیش فرض برگردون </string>
   <string name="TextSize">اندازه پیام متنی</string>
@@ -550,14 +538,12 @@ http://goo.gl/jnmjnZ</string>
   <string name="TelegramFaq">سوالات رایج تلگرام</string>
   <string name="TelegramFaqUrl">https://telegram.org/faq</string>
   <string name="PrivacyPolicy">سیاست های حریم خصوصی</string>
-  <string name="PrivacyPolicyUrl">https://telegram.org/privacy</string>
+  <string name="PrivacyPolicyUrl">http://plusmessenger.org/privacy</string>
   <string name="DeleteLocalization">فایل زبان پاک بشه ؟</string>
   <string name="IncorrectLocalization">فایل زبان خرابه</string>
   <string name="Enabled">فعال</string>
   <string name="Disabled">غیرفعال</string>
   <string name="NotificationsService">خدمات اعلانات</string>
-  <string name="NotificationsServiceDisableInfo">اگه گوگل پلی برای اعلانات کفایت می کنه می تونی خدمات اعلان ها رو غیرفعال کنی .
-البته ما پیشنهاد می کنیم این گزینه رو فعال بذاری تا برنامه در حال اجرا باشه و اعلان ها رو بلافاصله نشون بده .</string>
   <string name="SortBy">به ترتیب کن</string>
   <string name="ImportContacts">مخاطب ها رو اضافه کن</string>
   <string name="SortFirstName">نام</string>
@@ -571,8 +557,7 @@ http://goo.gl/jnmjnZ</string>
   <string name="BadgeNumber">شماره نشان ها</string>
   <string name="Short">کوتاه</string>
   <string name="Long">بلند</string>
-  <string name="SystemDefault">پیش فرض سیستم</string>
-  <string name="SettingsDefault">تنظیمات پیش فرض</string>
+
   <string name="AutomaticMediaDownload">رسانه ها رو خودکار دانلود کن</string>
   <string name="WhenUsingMobileData">چه موقع از دیتا استفاده بشه</string>
   <string name="WhenConnectedOnWiFi">چه موقع از وای فای استفاده بشه</string>
@@ -606,10 +591,7 @@ http://goo.gl/jnmjnZ</string>
   <string name="SmartNotifications">اعلانیه های هوشمند</string>
   <string name="SmartNotificationsDisabled">غیرفعال</string>
   <string name="SmartNotificationsInfo">حداکثر صدا %1$s بین %2$s</string>
-  <string name="SmartNotificationsSoundAtMost">حداکثر صدا</string>
-  <string name="SmartNotificationsTimes">زمان</string>
-  <string name="SmartNotificationsWithin">بین</string>
-  <string name="SmartNotificationsMinutes">دقیقه</string>
+
   <string name="SecretWebPage">پیش نمایش پیوند</string>
   <string name="SecretChat">گفتگوهای محرمانه</string>
   <string name="ChromeCustomTabs">مرورگر درون-برنامه</string>
@@ -617,7 +599,7 @@ http://goo.gl/jnmjnZ</string>
   <string name="DirectShare">اشتراک گذاری مستقیم</string>
   <string name="DirectShareInfo">نمایش گفتگوهای گذشته در منوی اشتراک گذاری</string>
   <!--cache view-->
-  <string name="CacheSettings">تنظیمات حافظه موقت</string>
+
   <string name="LocalDatabase">بانک اطلاعات محلی</string>
   <string name="LocalDatabaseClear">حافظه موقت پیام های متنی پاک بشن ؟</string>
   <string name="LocalDatabaseInfo">پاک کردن بانک اطلاعاتی محلی باعث میشه تا متن های ذخیره شده پاک بشن و حافظه داخلی دستگاهت آزاد بشه. تلگرام برای اینکه درست کار کنه نیاز داره تا بخشی از اونا رو نگه داره به همین خاطر حجمشون صفر نمیشه. \n\nاحتملا این عمل چند دقیقه طول بکشه.</string>
@@ -698,7 +680,6 @@ http://goo.gl/jnmjnZ</string>
   <string name="Of">%1$d از %2$d</string>
   <string name="Gallery">گالری</string>
   <string name="AllPhotos">همه عکس ها</string>
-  <string name="AllVideo">همه ویدیوها</string>
   <string name="NoPhotos">هنوز هیچ عکسی نیست</string>
   <string name="NoVideo">هنوز هیچ ویدیویی وجود نداره</string>
   <string name="PleaseDownload">اول زسانه ها رو دانلود کن</string>
@@ -841,10 +822,7 @@ http://goo.gl/jnmjnZ</string>
   <string name="CreateGroupError">متاسفانه بدلیل تنظیمات شخصی این کاربران نمیتوان با آنها یک گروه ایجاد نمود</string>
   <!--edit video view-->
   <string name="EditVideo">ویرایش ویدیو</string>
-  <string name="OriginalVideo">ویدیو اصلی</string>
-  <string name="EditedVideo">ویدیو ویرایش شده</string>
   <string name="SendingVideo">در حال ارسال ویدیو ...</string>
-  <string name="CompressVideo">ویدیو رو فشرده کن</string>
   <!--bot-->
   <string name="Bot">ربات</string>
   <string name="BotShare">اشتراک گذاری</string>
@@ -977,22 +955,20 @@ http://goo.gl/jnmjnZ</string>
   <string name="Page4Title">امن</string>
   <string name="Page5Title">قدرتمند</string>
   <string name="Page6Title">بر پایه ابری</string>
-  <string name="Page7Title">خصوصی</string>
   <string name="Page1Message"><![CDATA[<b>سریع ترین</b>]]> برنامه پیارم رسان جهان .<![CDATA[<br/>]]> <![CDATA[<b>رایگان</b>]]> و <![CDATA[<b>امنه</b>]]></string>
   <string name="Page2Message"><![CDATA[<b>تلگرام</b>]]> خیلی سریع تر از <![CDATA[<br/>]]>بقیه برنامه ارسال می کنه</string>
   <string name="Page3Message"><![CDATA[<b>تلگرام</b>]]> برای همیشه رایگانه و تبلیغی نداره<![CDATA[<br/>]]>هیچ هزینه اشتراکی هم نمی خواد</string>
   <string name="Page4Message"><![CDATA[<b>تلگرام</b>]]> پیام های شما رو <![CDATA[<br/>]]>از حمله هکرها حفظ می کنه</string>
   <string name="Page5Message"><![CDATA[<b>تلگرام</b>]]> هیچ محدودیتی برای  <![CDATA[<br/>]]>حجم فایل ها و گفت و گو ها نداره</string>
   <string name="Page6Message"><![CDATA[<b>تلگرام</b>]]>به شما این اجازه رو میده که<![CDATA[<br/>]]>با دستگاه های مختلف وصل بشید</string>
-  <string name="Page7Message"><![CDATA[<b>تلگرام</b>]]> پیام ها رو به طور وحشتناکی  <![CDATA[<br/>]]>رمز نگاری می کنه و شما می تونید اونا رو از بین ببرید</string>
   <string name="StartMessaging">شروع پیام رسانی</string>
   <!--plural-->
-  <string name="Online_zero">%1$d آنلاین</string>
-  <string name="Online_one">%1$d آنلاین</string>
-  <string name="Online_two">%1$d آنلاین</string>
-  <string name="Online_few">%1$d آنلاین</string>
-  <string name="Online_many">%1$d آنلاین</string>
-  <string name="Online_other">%1$d آنلاین</string>
+  <string name="OnlineCount_zero">%1$d آنلاین</string>
+  <string name="OnlineCount_one">%1$d آنلاین</string>
+  <string name="OnlineCount_two">%1$d آنلاین</string>
+  <string name="OnlineCount_few">%1$d آنلاین</string>
+  <string name="OnlineCount_many">%1$d آنلاین</string>
+  <string name="OnlineCount_other">%1$d آنلاین</string>
   <string name="Members_zero">%1$d عضو</string>
   <string name="Members_one">%1$d عضو</string>
   <string name="Members_two">%1$d عضو</string>
@@ -1017,12 +993,6 @@ http://goo.gl/jnmjnZ</string>
   <string name="messages_few">%1$d پیام</string>
   <string name="messages_many">%1$d پیام</string>
   <string name="messages_other">%1$d پیام</string>
-  <string name="comments_zero">%1$d نظرات</string>
-  <string name="comments_one">%1$d نظر</string>
-  <string name="comments_two">%1$d نظرات</string>
-  <string name="comments_few">%1$d نظرات</string>
-  <string name="comments_many">%1$d نظرات</string>
-  <string name="comments_other">%1$d نظرات</string>
   <string name="items_zero">هیچ یک از موارد</string>
   <string name="items_one">%1$d مورد</string>
   <string name="items_two">%1$d موارد</string>
@@ -1191,14 +1161,10 @@ http://goo.gl/jnmjnZ</string>
   <string name="formatterDay24H">HH:mm</string>
   <string name="formatterDay12H">h:mm a</string>
   <string name="formatDateAtTime">%1$s در %2$s</string>
-  <!--Telegram+--><!--
-  <string name="updatePlusText">تغییرات ورژن 3.7.0.2:
-\n\n- اضافه شدن آپشن تغییر دنگ آیکون تب های انتخاب نشده
-\n- اضافه شدن امکان استفاده از دکمه اشتراک مستقیم بجای پاسخ دهنده
-\n- امکان اضافه کردن گزینه اشتراک مستقیم به منوی پاپ آپ گپ ها
-\n- امکان تنظیم منو اشتراک مستقیم برای نشان دادن علاقه مندی ها در ابتدای لیست
-\n- رفع مشکلات و بهبود عملکرد
-\n- با تشکر از مهندس حامد عاملی و تیم تلگرام پلاس</string>-->
+  <!--Plus--><!--
+  <string name="updatePlusText">ورژن جدید 3.18.0.2
+\n\n- رفع باگ
+\n\n- با تشکر از مهندس حامد عاملی و تیم تلگرام پلاس</string>-->
   <string name="TelegramForAndroid">پیام رسان پلاس برای اندروید</string>
   <string name="Theming">قالب دهی</string>
   <string name="PlusSettings">تنظیمات پلاس</string>
@@ -1247,7 +1213,7 @@ http://goo.gl/jnmjnZ</string>
   <string name="EmojiViewTabColor">رنگ زبانه انتخاب شده شکلک</string>
   <string name="EmojiViewTabIconColor">رنگ آیکن زبانه شکلک</string>
   <string name="OnlineColor">رنگ آنلاین</string>
-  <string name="ChatMusic">موسیقی</string>
+  <string name="ChatMusic">موزیک</string>
   <string name="SaveTheme">ذخیره قالب</string>
   <string name="SaveThemeSum">ذخیره قالب در پرونده Telegram/Themes</string>
   <string name="SaveThemeToastText">قالب ذخیره شد!</string>
@@ -1255,7 +1221,7 @@ http://goo.gl/jnmjnZ</string>
   <string name="SaveErrorMsg0">قالب هنوز ایجاد نشده است. لطفا، ابتدا مودی را اعمال کنید.</string>
   <string name="restoreOkMsg">تنظیمات بازسازی از کارت حافظه بازخوانی شد.</string>
   <string name="restoreErrorMsg">فایل بازسازی در پرونده  %s یافت نشد.</string>
-  <string name="NoMediaMessage">کارت حافظه پیدا نشد.</string>
+  <string name="NoMediaMessage">کارت حافظه وجود ندارد.</string>
   <string name="EnterName">نام را وارد کنید</string>
   <string name="Themes">قالب ها</string>
   <string name="ApplyTheme">اعمال قالب</string>
@@ -1357,7 +1323,9 @@ http://goo.gl/jnmjnZ</string>
   <string name="RowGradientBLTR">پایین-چپ بالا-راست</string>
   <string name="RowGradientList">اعمال گرادینت به زمینه لیست</string>
   <string name="Copied">%s به کلیپبورد کپی شد</string>
-  <string name="JoinChannel">\n\nبه کانال رسمی پیام رسان پلاس بپیوندید:\nhttps://telegram.me/plusmsgrir</string>
+  <string name="JoinChannel">
+\n\nبه کانال رسمی پلاس مسنجر بپیوندید</string>
+  <string name="ChannelLink">https://telegram.me/plusmsgrir</string>
   <string name="DownloadThemes">دانلود قالب ها</string>
   <string name="OfficialChannel">کانال رسمی</string>
   <string name="DialogsSettings">مکالمات</string>
@@ -1402,6 +1370,105 @@ http://goo.gl/jnmjnZ</string>
   <string name="MarkAllAsRead">علامت گذاری همه دیالوگ ها به عنوان خوانده شده</string>
   <string name="CheckStyle">مدل تیک ها</string>
   <string name="DirectShareToMenu">نشان دادن کلید اشتراک مستقیم در پاپ آپ منو</string>
-  <string name="DirectShareReplies">کلید اشتراک مستقیم پاسخ بدهد</string>
+  <string name="DirectShareReplies">غیر از کانالها دکمه اشتراک مستقیم پاسخ دهد</string>
   <string name="DirectShareShowFavsFirst">هنگام اشتراک مستقیم ابتدا علاقه مندی ها نمایش داده شود</string>
+  <string name="ShowDateToast">اعلان تاریخ را بالا صفحه نشان بده</string>
+  <string name="ShowEditedMark">نشان دادن نشانگر پیام ویرایش شده</string>
+  <string name="Edited">ویراش شده</string>
+  <string name="LeaveWithoutDelete">ترک کردن با قابلیت بازگشت</string>
+  <string name="LeaveWithoutDeleteMsg">آیا میخواهید گروه را با امکان بازگشت دوباره ترک کنید؟ </string>
+  <string name="HideLeftGroup">پیام \"گروه را ترک کرد\"  را نشان نده</string>
+  <string name="HideJoinedGroup">پیام \"به گروه پیوست\"  را نشان نده</string>
+  <string name="HideBotKeyboard">کیبورد رباتهارا بطور پیش فرض مخفی کن</string>
+  <string name="ReturnToThisGroup">بازگشت به گروه</string>
+  <string name="ReturnToThisGroupMsg">اگر به گروه برگردید برای مدتی نمیتوانید آنجارا ترک کنید، آیا مطمئن هستید؟ </string>
+  <string name="Bio">زندگی نامه</string>
+  <string name="EditBio">ویرایش زندگی نامه</string>
+  <string name="InvertMessageOrder">برعکس کردن ترتیب پیام ها</string>
+  <string name="SearchUserOnTwitter">جستجوی نام کاربری در تویتر</string>
+  <string name="ShortcutError">خطا در اضافه کردن %s به صفحه اصلی</string>
+  <string name="SaveSettings">ذخیره تنظیمات</string>
+  <string name="SaveSettingsSum">ذخیره تنظیمات در پوشه تلگرام</string>
+  <string name="RestoreSettings">بازنشانی تنظیمات</string>
+  <string name="RestoreSettingsSum">بازنشانی تنظیمات از پوشه محلی</string>
+  <string name="ResetSettings"> بازنشانی تنظیمات پیشفرض</string>
+  <string name="ResetSettingsSum">تنظیم کردن به مقادیر پیشفرض تنظیمات</string>
+  <string name="AlsoFavorites">همچنین علاقه مندی ها</string>
+  <string name="ShowPhotoQualityBar">نمایش نوارکیفیت عکس</string>
+  <string name="PhotoQuality">کیفیت عکس ارسالی(%)</string>
+  <string name="Quality">کیفیت: %1$s%%</string>
+  <string name="MuteNewChats">ساکت کردن گپ جدید</string>
+  <string name="EncryptedChat">چت مخفی</string>
+  <string name="MarkAsUnread">علامت به عنوان خوانده نشده</string>
+  <string name="NameTooShort">خطا، نام خیلی کوتاه است</string>
+  <string name="SelectedMsgBGColor">بک گراند پیام انتخاب شده</string>
+  <string name="TabsToBottom">نشان دادن تب ها در پایین صفحه</string>
+  <string name="HideSelectedTabIndicator">نشانگر تب انتخاب شده را مخفی کن</string>
+  <string name="TabsBGColor">رنگ زمینه تب ها</string>
+  <string name="FavIndicatorColor">رنگ نشانگر علاقه مندی</string>
+  <string name="CreatorStarColor">رنگ ستاره سازنده گروه</string>
+  <string name="AdminStarColor">رنگ ستاره مدیر گروه</string>
+  <string name="EnableDirectReply">فعال کردن جواب مستقیم</string>
+  <string name="ToastNotification">اعلانات</string>
+  <string name="ShowOnlineToast">اعلان آنلاین بودن</string>
+  <string name="OnlineToastHelp">باید یک مخاطب باشد و هردو آخریب بازدیدشان بر روی مخاطب های من یا همه تنظیم باشد</string>
+  <string name="ShowOnlyIfContactFav">اعلان آنلاینی اگر عضو مخاطب ها یا علاقه مندی ها باشد </string>
+  <string name="ShowOfflineToast">اعلان آفلاین بودن</string>
+  <string name="ShowTypingToast">اعلان درحال نوشتن</string>
+  <string name="ToastNotificationSize">انازه اعلان ها</string>
+  <string name="ToastNotificationPadding">فاصله اعلان ها</string>
+  <string name="ToastNotificationToBottom">اعلان ها از پایین</string>
+  <string name="ToastNotificationPosition">موقعیت اعلان ها</string>
+  <string name="Left">چپ</string>
+  <string name="Center">وسط</string>
+  <string name="Right">راست</string>
+  <string name="Offline">آفلاین</string>
+  <string name="GoToFirstMessage">برو به اولین پیام</string>
+  <string name="ShowUserMessages">نشان دادن پیام های کاربر</string>
+  <string name="ShowUserMedia">نشان دادن مدیا کاربر</string>
+  <string name="HidePinnedMsgAlert">میخواهید پیام های پین شده را مخفی کنید ؟</string>
+  <string name="ShowQuickBar">نشان دادن منوی سریع</string>
+  <string name="VerticalQuickBar">منوی سریع عمودی</string>
+  <string name="AlwaysBackToMain">همیشه به صفحه اصلی برگرد</string>
+  <string name="DoNotCloseQuickBar">منوی سریع را نبند</string>
+  <string name="HideQuickBarOnScroll">منوی سریع را هنگام پیمایش مخفی کن</string>
+  <string name="CenterQuickBarButton">دکمه منوی سریع در وسط</string>
+  <string name="QuickBarColor">رنگ منوی سریع</string>
+  <string name="QuickBarNamesColor">رنگ نامهای منوی سریع</string>
+  <string name="NoChatsYet">نه بیشتر از %s</string>
+  <string name="ShowMembersOnQuickBar">اعضای گروه را نشان بده</string>
+  <string name="SaveToCloud">در فضای ابری ذخیره کن</string>
+  <string name="MessageSaved">پیام در فضای ابری ذخیره شد</string>
+  <string name="MessagesSaved">%s پیام در فضای ابری ذخیره شد</string>
+  <string name="SaveToCloudQuote">نقل قول برای ذخیره در فضای ابری</string>
+  <string name="SwipeToReply">کشیدن برای پاسخ به پیام</string>
+  <string name="HideInstantCamera">دکمه دوربین سریع را مخفی کن</string>
+  <string name="OverrideNotificationsIfPlaying">هشدار ها را در نظر نگیر اگر در حال اجرا هستند</string>
+  <string name="HideStatusBar">استاتوس بار را مخفی کن (نیاز به اندروید ۴.۱+)</string>
+  <string name="DoNotHideStickersTab">تب استیکر ها را مخفی نکن</string>
+  <string name="GoToMessage">برو به پیام</string>
+  <string name="Download">دانلود</string>
+  <string name="EnableGoToMessage">فعال کردن \"برو به پیام\"</string>
+  <string name="ChatsCounters">شمارشگر چت ها</string>
+  <string name="Total">همه</string>
+  <string name="Created">ساخته شد</string>
+  <string name="Administrator">مدیریت</string>
+  <string name="DisableTabsScrolling">غیر فعال کردن پیمایش تب ها</string>
+  <string name="SortTabs">مرتب کردن تب ها</string>
+  <string name="ShowTabTitle">نشان دادن عنوان تب ها</string>
+  <string name="TabsTextSize">اندازه متن تب ها</string>
+  <string name="FitTabsToScreen">تب ها با اندازه صفحه همگام سازی شود</string>
+  <string name="TabsWarningMsg">برای نشان دادن تب ها باید حداقل ۲ تب قابل رویت وجود داشته باشد</string>
+  <string name="LastAccess">آخرین دسترسی :</string>
+  <string name="HideHeaderShadow">سایه عنوان را مخفی کن</string>
+  <string name="Cancelled">لغوشد</string>
+  <string name="TabsScreenInfo">با برداشتن تیک هر تب آن را مخفی کنید
+\n· با لمس طولانی آن را جابجا کنید
+\n· اگر تب سوپر گروه غیر فعال شود همه ةنها در تب گروه ها حاظر میشوند
+\n· برای نشان دادن تب ها حداقل دو مورد را انتخاب کنید</string>
+  <string name="DoNotChangeHeaderTitle">عنوان هدر را تقییر نده</string>
+  <string name="Markdown">علامت‌گذاری</string>
+  <string name="LimitTabsCounter">محدود کردن شمارنده تب ها</string>
+  <string name="EmojiBigSizeInfo">در صورت نشان دادن شکلک های سیستم در دسترس نیست (P0.1)</string>
+  <string name="UsePlusTheme">استفاده از تم های پلاس</string>
 </resources>

@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui;
@@ -17,12 +17,14 @@ import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -30,15 +32,19 @@ import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildConfig;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
-import org.telegram.ui.Adapters.BaseFragmentAdapter;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
+import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextColorCell;
 import org.telegram.ui.Cells.TextDetailSettingsCell;
 import org.telegram.ui.Cells.TextSettingsCell;
@@ -47,6 +53,11 @@ import org.telegram.ui.Components.ColorSelectorDialog;
 import java.io.File;
 import java.util.ArrayList;
 
+import static android.R.attr.name;
+import static android.R.attr.text;
+import static android.R.attr.value;
+import static org.telegram.messenger.Utilities.findPrefFolder;
+import static org.telegram.ui.ActionBar.Theme.applyTheme;
 import static org.telegram.ui.Components.ColorSelectorDialog.OnColorChangedListener;
 
 public class ThemingActivity extends BaseFragment {
@@ -78,15 +89,20 @@ public class ThemingActivity extends BaseFragment {
 
     private int dialogColorRow;
 
+    private int usePlusThemeRow;
+
     private int rowCount;
 
     public final static int CENTER = 0;
+
+    private boolean showPrefix;
 
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
 
         rowCount = 0;
+        usePlusThemeRow = rowCount++;
         generalSection2Row = rowCount++;
         themeColorRow = rowCount++;
         dialogColorRow = rowCount++;
@@ -105,7 +121,8 @@ public class ThemingActivity extends BaseFragment {
         saveThemeRow = rowCount++;
         applyThemeRow = rowCount++;
         resetThemeRow = rowCount++;
-
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE);
+        showPrefix = preferences.getBoolean("showPrefix", true);
         return true;
     }
 
@@ -139,6 +156,19 @@ public class ThemingActivity extends BaseFragment {
                 }
             });
 
+            actionBar.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showPrefix = !showPrefix;
+                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putBoolean("showPrefix", showPrefix).apply();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                }
+            });
+
             listAdapter = new ListAdapter(context);
 
             fragmentView = new FrameLayout(context);
@@ -146,14 +176,14 @@ public class ThemingActivity extends BaseFragment {
 
 
             listView = new ListView(context);
-            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-            listView.setBackgroundColor(preferences.getInt("prefBGColor", 0xffffffff));
+            //SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+            if(Theme.usePlusTheme)listView.setBackgroundColor(Theme.prefBGColor);
             listView.setDivider(null);
             listView.setDividerHeight(0);
             listView.setVerticalScrollBarEnabled(false);
-            int def = preferences.getInt("themeColor", AndroidUtilities.defColor);
-            int hColor = preferences.getInt("prefHeaderColor", def);
-            AndroidUtilities.setListViewEdgeEffectColor(listView, /*AvatarDrawable.getProfileBackColorForId(5)*/ hColor);
+            //int def = preferences.getInt("themeColor", AndroidUtilities.defColor);
+            //int hColor = preferences.getInt("prefHeaderColor", def);
+            AndroidUtilities.setListViewEdgeEffectColor(listView, /*AvatarDrawable.getProfileBackColorForId(5)*/ Theme.prefActionbarColor);
             frameLayout.addView(listView);
             FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();
             layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT;
@@ -172,19 +202,17 @@ public class ThemingActivity extends BaseFragment {
                         if (getParentActivity() == null) {
                             return;
                         }
-                        //SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
                         LayoutInflater li = (LayoutInflater)getParentActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
                         li.inflate(R.layout.colordialog, null, false);
-
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
                                 commitInt(color);
+                                Theme.updateAllColors();
+                                NotificationCenter.getInstance().postNotificationName(NotificationCenter.updateDialogsTheme, Theme.UPDATE_DIALOGS_ALL_COLOR);
                             }
 
                         }, defColor, CENTER, 0, false);
-
                         colorDialog.show();
                     } else if (i == dialogColorRow) {
                         if (getParentActivity() == null) {
@@ -196,66 +224,81 @@ public class ThemingActivity extends BaseFragment {
                         ColorSelectorDialog colorDialog = new ColorSelectorDialog(getParentActivity(), new OnColorChangedListener() {
                             @Override
                             public void colorChanged(int color) {
+                                Theme.dialogColor = color;
                                 commitInt("dialogColor", color);
                             }
                         },preferences.getInt("dialogColor", defColor), CENTER, 0, false);
                         colorDialog.show();
                     } else if(i == saveThemeRow){
-                        LayoutInflater li = LayoutInflater.from(getParentActivity());
-                        View promptsView = li.inflate(R.layout.editbox_dialog, null);
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                        builder.setView(promptsView);
-                        final EditText userInput = (EditText) promptsView.findViewById(R.id.editTextDialogUserInput);
-                        userInput.setHint(LocaleController.getString("EnterName", R.string.EnterName));
-                        userInput.setHintTextColor(0xff979797);
-                        userInput.getBackground().setColorFilter(preferences.getInt("dialogColor", defColor), PorterDuff.Mode.SRC_IN);
-                        AndroidUtilities.clearCursorDrawable(userInput);
-                        //builder.setMessage(LocaleController.getString("EnterName", R.string.EnterName));
-                        builder.setTitle(LocaleController.getString("SaveTheme", R.string.SaveTheme));
-                        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                if (saving) {
-                                    return;
+                        File file = new File (Utilities.findPrefFolder(getParentActivity()), AndroidUtilities.THEME_PREFS + ".xml");
+                        if(!file.exists() || (file.exists() && file.length() < 100)){
+                            AndroidUtilities.runOnUIThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getParentActivity(), LocaleController.getString("SaveErrorMsg0", R.string.SaveErrorMsg0) ,Toast.LENGTH_LONG ).show();
                                 }
-                                saving = true;
-                                AndroidUtilities.runOnUIThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        saving = false;
-                                        if (getParentActivity() != null) {
-                                            String pName = userInput.getText().toString();
-                                            AndroidUtilities.setStringPref(getParentActivity(), "themeName", pName);
-                                            try{
-                                                PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-                                                AndroidUtilities.setStringPref(getParentActivity(),"version", pInfo.versionName);
-                                            } catch (Exception e) {
-                                                FileLog.e("tmessages", e);
-                                            }
-                                            AndroidUtilities.setStringPref(getParentActivity(),"model", android.os.Build.MODEL+"/"+android.os.Build.VERSION.RELEASE);
-                                            Utilities.savePreferencesToSD(getParentActivity(), "/Telegram/Themes", AndroidUtilities.THEME_PREFS+".xml", pName+".xml", true);
-                                            Utilities.copyWallpaperToSD(getParentActivity(), pName, true);
-                                            //Toast toast = Toast.makeText(getParentActivity(), LocaleController.getString("SaveThemeToastText", R.string.SaveThemeToastText), Toast.LENGTH_SHORT);
-                                            //toast.show();
-                                        }
+                            });
+                        } else {
+                            LayoutInflater li = LayoutInflater.from(getParentActivity());
+                            View promptsView = li.inflate(R.layout.editbox_dialog, null);
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                            builder.setView(promptsView);
+                            final EditText userInput = (EditText) promptsView.findViewById(R.id.editTextDialogUserInput);
+                            userInput.setHint(LocaleController.getString("EnterName", R.string.EnterName));
+                            userInput.setHintTextColor(0xff979797);
+                            userInput.getBackground().setColorFilter(preferences.getInt("dialogColor", defColor), PorterDuff.Mode.SRC_IN);
+                            AndroidUtilities.clearCursorDrawable(userInput);
+                            //builder.setMessage(LocaleController.getString("EnterName", R.string.EnterName));
+                            builder.setTitle(LocaleController.getString("SaveTheme", R.string.SaveTheme));
+                            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    if (saving) {
+                                        return;
                                     }
-                                });
-                            }
-                        });
+                                    final String pName = userInput.getText().toString();
+                                    if (pName.length() < 1) {
+                                        Toast.makeText(getParentActivity(), LocaleController.getString("NameTooShort", R.string.NameTooShort), Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+                                    saving = true;
+                                    AndroidUtilities.runOnUIThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            saving = false;
+                                            if (getParentActivity() != null) {
+                                                //String pName = userInput.getText().toString();
+                                                AndroidUtilities.setStringPref(getParentActivity(), "themeName", pName);
+                                                try {
+                                                    PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
+                                                    AndroidUtilities.setStringPref(getParentActivity(), "version", pInfo.versionName);
+                                                } catch (Exception e) {
+                                                    FileLog.e(e);
+                                                }
+                                                AndroidUtilities.setStringPref(getParentActivity(), "model", android.os.Build.MODEL + "/" + android.os.Build.VERSION.RELEASE);
+                                                AndroidUtilities.setStringPref(getParentActivity(), "date", System.currentTimeMillis() + "");
+                                                Utilities.savePreferencesToSD(getParentActivity(), "/Telegram/Themes", AndroidUtilities.THEME_PREFS + ".xml", pName + ".xml", true);
+                                                Utilities.copyWallpaperToSD(getParentActivity(), pName, true);
+                                            }
+                                        }
+                                    });
+                                }
+                            });
 
-                        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                        showDialog(builder.create());
-
+                            builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                            showDialog(builder.create());
+                        }
                     } else if (i == applyThemeRow) {
                         DocumentSelectActivity fragment = new DocumentSelectActivity();
                         fragment.fileFilter = ".xml";
+                        fragment.arrayFilter = new String[] {".xml"};
                         fragment.setDelegate(new DocumentSelectActivity.DocumentSelectActivityDelegate() {
                             @Override
                             public void didSelectFiles(DocumentSelectActivity activity, ArrayList<String> files) {
                                 final String xmlFile = files.get(0);
                                 File themeFile = new File(xmlFile);
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                                builder.setTitle(LocaleController.getString("ApplyTheme", R.string.ApplyTheme));
+                                builder.setTitle(LocaleController.getString("ApplyThemeFile", R.string.ApplyThemeFile));
                                 builder.setMessage(themeFile.getName());
                                 final String wName = xmlFile.substring(0, xmlFile.lastIndexOf(".")) + "_wallpaper.jpg";
                                 File wFile = new File(wName);
@@ -326,11 +369,16 @@ public class ThemingActivity extends BaseFragment {
                                                 if (toFile.exists()) {
                                                     toFile.delete();
                                                 }
-                                                fixLayout();
                                                 if (getParentActivity() != null) {
                                                     Toast toast = Toast.makeText(getParentActivity(), LocaleController.getString("ResetThemeToastText", R.string.ResetThemeToastText), Toast.LENGTH_SHORT);
                                                     toast.show();
                                                 }
+                                                Theme.updateAllColors();
+                                                if(listAdapter != null){
+                                                    listAdapter.notifyDataSetChanged();
+                                                }
+                                                if(Theme.usePlusTheme)updateTheme();
+                                                fixLayout();
                                             }
                                 });
                                 AndroidUtilities.needRestart = true;
@@ -359,6 +407,65 @@ public class ThemingActivity extends BaseFragment {
                         presentFragment(new ThemingProfileActivity());
                     } else if (i == settingsRow) {
                         presentFragment(new ThemingSettingsActivity());
+                    } else if (i == usePlusThemeRow) {
+                        Theme.usePlusTheme = !Theme.usePlusTheme;
+                        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+                        SharedPreferences.Editor editor = themePrefs.edit();
+                        editor.putBoolean("usePlusTheme", Theme.usePlusTheme);
+                        editor.apply();
+                        if (view instanceof TextCheckCell) {
+                            ((TextCheckCell) view).setChecked(Theme.usePlusTheme);
+                        }
+                        if(Theme.usePlusTheme){
+                            //Log.e("ThemingActivity", ":");
+                            if(Theme.getCurrentTheme() != Theme.getDefaultTheme()){
+                                SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                                SharedPreferences.Editor edit = prefs.edit();
+                                edit.putString("prevTheme", Theme.getCurrentTheme().name);
+                                edit.commit();
+                                //Log.e("ThemingActivity", "IN: " + Theme.getCurrentTheme().name);
+                                applyTheme(Theme.getDefaultTheme());
+                            }
+                        } else{
+                            //if(Theme.getCurrentTheme() != Theme.getDefaultTheme()){
+                                //applyTheme(Theme.getCurrentTheme());
+                                Theme.ThemeInfo applyingTheme = null;
+                                try {
+                                    SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                                    String theme = prefs.getString("prevTheme", prefs.getString("theme", null));
+                                    if (theme != null) {
+                                        applyingTheme = Theme.getThemeList().get(theme);
+                                    }
+                                } catch (Exception e) {
+                                    FileLog.e(e);
+                                }
+                                if (applyingTheme == null) {
+                                    applyingTheme = Theme.getDefaultTheme();
+                                }
+                                if(BuildConfig.DEBUG) {
+                                    final String name = applyingTheme.name;
+                                    AndroidUtilities.runOnUIThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (getParentActivity() != null) {
+                                                Toast toast = Toast.makeText(getParentActivity(), name, Toast.LENGTH_SHORT);
+                                                toast.show();
+                                            }
+                                        }
+                                    });
+                                }
+                                Theme.applyTheme(applyingTheme);
+                            //}
+                        }
+                        //if(Theme.usePlusTheme)Theme.updateAllColors();
+                        //refreshTheme();
+                        Theme.applyPlusTheme(true);
+                        if (parentLayout != null) {
+                            parentLayout.rebuildAllFragmentViews(false, false);
+                        }
+                        if (listView != null) {
+                            listView.invalidateViews();
+                        }
                     }
                 }
             });
@@ -386,6 +493,7 @@ public class ThemingActivity extends BaseFragment {
                 parent.removeView(fragmentView);
             }
         }
+        if(Theme.usePlusTheme)updateTheme();
         return fragmentView;
     }
 
@@ -394,9 +502,11 @@ public class ThemingActivity extends BaseFragment {
         SharedPreferences.Editor editor = preferences.edit();
         editor.remove(key);
         editor.commit();
-        if (listView != null) {
+        Theme.updateMainColors();
+        refreshTheme();
+        /*if (listView != null) {
             listView.invalidateViews();
-        }
+        }*/
     }
 
     private void commitInt(String key, int value){
@@ -404,9 +514,7 @@ public class ThemingActivity extends BaseFragment {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt(key, value);
         editor.commit();
-        if (listView != null) {
-            listView.invalidateViews();
-        }
+        refreshTheme();
     }
 
     private void commitInt(int i){
@@ -444,6 +552,24 @@ public class ThemingActivity extends BaseFragment {
         editor.commit();
         fixLayout();
         AndroidUtilities.themeColor = i;
+        refreshTheme();
+    }
+
+    private void refreshTheme(){
+        if(!Theme.usePlusTheme){
+            Theme.usePlusTheme = true;
+            SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+            SharedPreferences.Editor editor = themePrefs.edit();
+            editor.putBoolean("usePlusTheme", true);
+            editor.commit();
+        }
+        Theme.applyPlusTheme();
+        if (parentLayout != null) {
+            parentLayout.rebuildAllFragmentViews(false, false);
+        }
+        if (listView != null) {
+            listView.invalidateViews();
+        }
     }
 
     @Override
@@ -453,18 +579,15 @@ public class ThemingActivity extends BaseFragment {
             listAdapter.notifyDataSetChanged();
         }
         fixLayout();
-        updateTheme();
     }
 
     private void updateTheme(){
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int def = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-        actionBar.setBackgroundColor(themePrefs.getInt("prefHeaderColor", def));
-        actionBar.setTitleColor(themePrefs.getInt("prefHeaderTitleColor", 0xffffffff));
-
+        actionBar.setTitleColor(Theme.prefActionbarTitleColor);
+        actionBar.setBackgroundColor(Theme.prefActionbarColor);
         Drawable back = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_back);
-        back.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.MULTIPLY);
+        back.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.MULTIPLY);
         actionBar.setBackButtonDrawable(back);
+        actionBar.setItemsColor(Theme.prefActionbarIconsColor, false);
     }
 
     @Override
@@ -488,11 +611,11 @@ public class ThemingActivity extends BaseFragment {
             }
         });
         listView.setAdapter(listAdapter);
-        actionBar.setBackgroundColor(AndroidUtilities.getIntColor("themeColor"));
+        //actionBar.setBackgroundColor(AndroidUtilities.getIntColor("themeColor"));
 
     }
 
-    private class ListAdapter extends BaseFragmentAdapter {
+    private class ListAdapter extends BaseAdapter {
         private Context mContext;
 
         public ListAdapter(Context context) {
@@ -506,7 +629,8 @@ public class ThemingActivity extends BaseFragment {
 
         @Override
         public boolean isEnabled(int i) {
-            return  i == themeColorRow || i == dialogColorRow || i == chatsRow || i == chatRow || i == contactsRow || i == drawerRow || i == profileRow || i == settingsRow || i == resetThemeRow || i == saveThemeRow || i == applyThemeRow;
+            return  i == themeColorRow || i == dialogColorRow || i == chatsRow || i == chatRow || i == contactsRow || i == drawerRow ||
+                    i == profileRow || i == settingsRow || i == resetThemeRow || i == saveThemeRow || i == applyThemeRow || i == usePlusThemeRow;
         }
 
         @Override
@@ -532,6 +656,7 @@ public class ThemingActivity extends BaseFragment {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             int type = getItemViewType(i);
+            String prefix = showPrefix ? (i - screensSection2Row) + " " : "";
             if (type == 0) {
                 if (view == null) {
                     view = new ShadowSectionCell(mContext);
@@ -556,17 +681,17 @@ public class ThemingActivity extends BaseFragment {
                 }
                 TextSettingsCell textCell = (TextSettingsCell) view;
                 if (i == chatsRow) {
-                    textCell.setText(LocaleController.getString("MainScreen", R.string.MainScreen), true);
+                    textCell.setText(prefix + LocaleController.getString("MainScreen", R.string.MainScreen), true);
                 } else if (i == chatRow) {
-                    textCell.setText(LocaleController.getString("ChatScreen", R.string.ChatScreen), true);
+                    textCell.setText(prefix + LocaleController.getString("ChatScreen", R.string.ChatScreen), true);
                 } else if (i == contactsRow) {
-                    textCell.setText(LocaleController.getString("ContactsScreen", R.string.ContactsScreen), true);
+                    textCell.setText(prefix + LocaleController.getString("ContactsScreen", R.string.ContactsScreen), true);
                 } else if (i == drawerRow) {
-                    textCell.setText(LocaleController.getString("NavigationDrawer", R.string.NavigationDrawer), true);
+                    textCell.setText(prefix + LocaleController.getString("NavigationDrawer", R.string.NavigationDrawer), true);
                 } else if (i == profileRow) {
-                    textCell.setText(LocaleController.getString("ProfileScreen", R.string.ProfileScreen), true);
+                    textCell.setText(prefix + LocaleController.getString("ProfileScreen", R.string.ProfileScreen), true);
                 } else if (i == settingsRow) {
-                    textCell.setText(LocaleController.getString("SettingsScreen", R.string.SettingsScreen), false);
+                    textCell.setText(prefix + LocaleController.getString("SettingsScreen", R.string.SettingsScreen), false);
                 }
             }
             else if (type == 3) {
@@ -577,10 +702,19 @@ public class ThemingActivity extends BaseFragment {
                 //textCell.setBackgroundColor(0xffffffff);
                 if (i == saveThemeRow) {
                     textCell.setMultilineDetail(true);
-                    textCell.setTextAndValue(LocaleController.getString("SaveTheme", R.string.SaveTheme), LocaleController.getString("SaveThemeSum", R.string.SaveThemeSum), true);
+                    textCell.setMultilineDetail(true);
+                    String text = LocaleController.getString("SaveTheme", R.string.SaveTheme).toLowerCase();
+                    if (text.length() > 0) {
+                        text = String.valueOf(text.charAt(0)).toUpperCase() + text.subSequence(1, text.length());
+                    }
+                    textCell.setTextAndValue(text, LocaleController.getString("SaveThemeSum", R.string.SaveThemeSum), true);
                 } else if (i == applyThemeRow) {
                     textCell.setMultilineDetail(true);
-                    textCell.setTextAndValue(LocaleController.getString("ApplyTheme", R.string.ApplyTheme), LocaleController.getString("ApplyThemeSum", R.string.ApplyThemeSum), true);
+                    String text = LocaleController.getString("ApplyThemeFile", R.string.ApplyThemeFile);
+                    //if (text.length() > 0) {
+                    //    text = String.valueOf(text.charAt(0)).toUpperCase() + text.subSequence(1, text.length());
+                    //}
+                    textCell.setTextAndValue(text, LocaleController.getString("ApplyThemeSum", R.string.ApplyThemeSum), true);
                 } else if (i == resetThemeRow) {
                     textCell.setMultilineDetail(true);
                     textCell.setTextAndValue(LocaleController.getString("ResetThemeSettings", R.string.ResetThemeSettings), LocaleController.getString("ResetThemeSettingsSum", R.string.ResetThemeSettingsSum), false);
@@ -600,8 +734,19 @@ public class ThemingActivity extends BaseFragment {
                 } else if (i == dialogColorRow) {
                     textCell.setTextAndColor(LocaleController.getString("DialogColor", R.string.DialogColor), preferences.getInt("dialogColor", defColor), false);
                 }
+            } else if (type == 5) {
+                if (view == null) {
+                    view = new TextCheckCell(mContext);
+                }
+                TextCheckCell textCell = (TextCheckCell) view;
+                if (i == usePlusThemeRow) {
+                    textCell.setTag("usePlusTheme");
+                    textCell.setTextAndCheck(LocaleController.getString("UsePlusTheme", R.string.UsePlusTheme), Theme.usePlusTheme, true);
+                }
             }
-
+            if(view != null){
+                view.setBackgroundColor(Theme.usePlusTheme ? Theme.prefBGColor : Theme.getColor(Theme.key_windowBackgroundWhite));
+            }
             return view;
         }
 
@@ -621,6 +766,8 @@ public class ThemingActivity extends BaseFragment {
             }
             else if ( i == themeColorRow || i == dialogColorRow) {
                 return 4;
+            } else if ( i == usePlusThemeRow) {
+                return 5;
             }
             else {
                 return 2;
@@ -629,7 +776,7 @@ public class ThemingActivity extends BaseFragment {
 
         @Override
         public int getViewTypeCount() {
-            return 5;
+            return 6;
         }
 
         @Override

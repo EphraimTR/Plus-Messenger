@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Cells;
@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.CheckBoxSquare;
 import org.telegram.ui.Components.LayoutHelper;
 
@@ -30,17 +31,17 @@ public class CheckBoxCell extends FrameLayout {
     private static Paint paint;
     private boolean needDivider;
 
-    public CheckBoxCell(Context context) {
+    public CheckBoxCell(Context context, boolean alert) {
         super(context);
-
+        //plus
         if (paint == null) {
             paint = new Paint();
             paint.setColor(0xffd9d9d9);
             paint.setStrokeWidth(1);
         }
-
+        //
         textView = new TextView(context);
-        textView.setTextColor(0xff212121);
+        textView.setTextColor(Theme.getColor(alert ? Theme.key_dialogTextBlack : Theme.key_windowBackgroundWhiteBlackText));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         textView.setLines(1);
         textView.setMaxLines(1);
@@ -50,7 +51,7 @@ public class CheckBoxCell extends FrameLayout {
         addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 17 : 46), 0, (LocaleController.isRTL ? 46 : 17), 0));
 
         valueTextView = new TextView(context);
-        valueTextView.setTextColor(0xff2f8cc9);
+        valueTextView.setTextColor(Theme.getColor(alert ? Theme.key_dialogTextBlue : Theme.key_windowBackgroundWhiteValueText));
         valueTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         valueTextView.setLines(1);
         valueTextView.setMaxLines(1);
@@ -59,7 +60,7 @@ public class CheckBoxCell extends FrameLayout {
         valueTextView.setGravity((LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL);
         addView(valueTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.TOP, 17, 0, 17, 0));
 
-        checkBox = new CheckBoxSquare(context);
+        checkBox = new CheckBoxSquare(context, alert);
         addView(checkBox, LayoutHelper.createFrame(18, 18, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 0 : 17), 15, (LocaleController.isRTL ? 17 : 0), 0));
     }
 
@@ -86,6 +87,14 @@ public class CheckBoxCell extends FrameLayout {
         setWillNotDraw(!divider);
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        textView.setAlpha(enabled ? 1.0f : 0.5f);
+        valueTextView.setAlpha(enabled ? 1.0f : 0.5f);
+        checkBox.setAlpha(enabled ? 1.0f : 0.5f);
+    }
+
     public void setChecked(boolean checked, boolean animated) {
         checkBox.setChecked(checked, animated);
     }
@@ -94,10 +103,31 @@ public class CheckBoxCell extends FrameLayout {
         return checkBox.isChecked();
     }
 
+    public TextView getTextView() {
+        return textView;
+    }
+
+    public TextView getValueTextView() {
+        return valueTextView;
+    }
+
+    public CheckBoxSquare getCheckBox() {
+        return checkBox;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         if (needDivider) {
-            canvas.drawLine(getPaddingLeft(), getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, paint);
+            canvas.drawLine(getPaddingLeft(), getHeight() - 1, getWidth() - getPaddingRight(), getHeight() - 1, Theme.dividerPaint);
         }
     }
+    // plus
+    public void setValueColor(int color){
+        valueTextView.setTextColor(color);
+    }
+
+    public void setCheckColor(int color){
+        checkBox.setColor(color);
+    }
+    //
 }

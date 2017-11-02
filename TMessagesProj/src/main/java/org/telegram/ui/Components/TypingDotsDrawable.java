@@ -3,39 +3,29 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui.Components;
 
-import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
-import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.view.animation.DecelerateInterpolator;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.ui.ActionBar.Theme;
 
-public class TypingDotsDrawable extends Drawable {
+public class TypingDotsDrawable extends StatusDrawable {
 
     private boolean isChat = false;
-    private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float[] scales = new float[3];
     private float[] startTimes = new float[] {0, 150, 300};
     private float[] elapsedTimes = new float[] {0, 0, 0};
     private long lastUpdateTime = 0;
     private boolean started = false;
     private DecelerateInterpolator decelerateInterpolator = new DecelerateInterpolator();
-
-    public TypingDotsDrawable() {
-        super();
-        //paint.setColor(Theme.ACTION_BAR_SUBTITLE_COLOR);
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        paint.setColor(themePrefs.getInt("chatTypingColor",themePrefs.getInt("chatStatusColor", AndroidUtilities.getIntDarkerColor("themeColor", -0x40))));
-    }
 
     public void setIsChat(boolean value) {
         isChat = value;
@@ -95,15 +85,32 @@ public class TypingDotsDrawable extends Drawable {
     public void draw(Canvas canvas) {
         int y;
         if (isChat) {
-            y = AndroidUtilities.dp(8.3f) + getBounds().top;
+            y = AndroidUtilities.dp(8.5f) + getBounds().top;
         } else {
-            y = AndroidUtilities.dp(9) + getBounds().top;
+            y = AndroidUtilities.dp(9.3f) + getBounds().top;
         }
-        canvas.drawCircle(AndroidUtilities.dp(3), y, scales[0] * AndroidUtilities.density, paint);
-        canvas.drawCircle(AndroidUtilities.dp(9), y, scales[1] * AndroidUtilities.density, paint);
-        canvas.drawCircle(AndroidUtilities.dp(15), y, scales[2] * AndroidUtilities.density, paint);
+        Theme.chat_statusPaint.setAlpha(255);
+        //plus
+        if(Theme.usePlusTheme)Theme.chat_statusPaint.setColor(Theme.chatTypingColor);
+        //
+        canvas.drawCircle(AndroidUtilities.dp(3), y, scales[0] * AndroidUtilities.density, Theme.chat_statusPaint);
+        canvas.drawCircle(AndroidUtilities.dp(9), y, scales[1] * AndroidUtilities.density, Theme.chat_statusPaint);
+        canvas.drawCircle(AndroidUtilities.dp(15), y, scales[2] * AndroidUtilities.density, Theme.chat_statusPaint);
+        checkUpdate();
+    }
+
+    private void checkUpdate() {
         if (started) {
-            update();
+            if (!NotificationCenter.getInstance().isAnimationInProgress()) {
+                update();
+            } else {
+                AndroidUtilities.runOnUIThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkUpdate();
+                    }
+                }, 100);
+            }
         }
     }
 

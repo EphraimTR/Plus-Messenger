@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui;
@@ -27,26 +27,27 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
-import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.LayoutHelper;
 
 public class ChangeNameActivity extends BaseFragment {
 
     private EditText firstNameField;
     private EditText lastNameField;
-    private EditText userStatusField;
     private View headerLabelView;
     private View doneButton;
 
@@ -76,7 +77,7 @@ public class ChangeNameActivity extends BaseFragment {
 
             SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
             Drawable done = getParentActivity().getResources().getDrawable(R.drawable.ic_done);
-            done.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.SRC_IN);
+            done.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.SRC_IN);
             doneButton = menu.addItemWithWidth(done_button, done, AndroidUtilities.dp(56));
 
             TLRPC.User user = MessagesController.getInstance().getUser(UserConfig.getClientUserId());
@@ -97,9 +98,10 @@ public class ChangeNameActivity extends BaseFragment {
 
         firstNameField = new EditText(context);
             firstNameField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-            firstNameField.setHintTextColor(0xff979797);
-            firstNameField.setTextColor(0xff212121);
-            firstNameField.getBackground().setColorFilter(AndroidUtilities.getIntColor("themeColor"), PorterDuff.Mode.SRC_IN);
+        firstNameField.setHintTextColor(Theme.usePlusTheme ? Theme.prefSummaryColor : Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
+        firstNameField.setTextColor(Theme.usePlusTheme ? Theme.prefTitleColor : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        firstNameField.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
+        if(Theme.usePlusTheme)firstNameField.getBackground().setColorFilter(Theme.defColor, PorterDuff.Mode.SRC_IN);
             firstNameField.setMaxLines(1);
             firstNameField.setLines(1);
             firstNameField.setSingleLine(true);
@@ -123,9 +125,10 @@ public class ChangeNameActivity extends BaseFragment {
 
         lastNameField = new EditText(context);
             lastNameField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-            lastNameField.setHintTextColor(0xff979797);
-            lastNameField.setTextColor(0xff212121);
-            lastNameField.getBackground().setColorFilter(AndroidUtilities.getIntColor("themeColor"), PorterDuff.Mode.SRC_IN);
+        lastNameField.setHintTextColor(Theme.usePlusTheme ? Theme.prefSummaryColor : Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
+        lastNameField.setTextColor(Theme.usePlusTheme ? Theme.prefTitleColor : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        lastNameField.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
+        if(Theme.usePlusTheme)lastNameField.getBackground().setColorFilter(Theme.defColor, PorterDuff.Mode.SRC_IN);
             lastNameField.setMaxLines(1);
             lastNameField.setLines(1);
             lastNameField.setSingleLine(true);
@@ -164,18 +167,16 @@ public class ChangeNameActivity extends BaseFragment {
             firstNameField.requestFocus();
             AndroidUtilities.showKeyboard(firstNameField);
         }
-        updateTheme();
+        if(Theme.usePlusTheme)updateTheme();
     }
 
     private void updateTheme(){
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int def = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-        actionBar.setBackgroundColor(themePrefs.getInt("prefHeaderColor", def));
-        actionBar.setTitleColor(themePrefs.getInt("prefHeaderTitleColor", 0xffffffff));
-
+        actionBar.setBackgroundColor(Theme.prefActionbarColor);
+        actionBar.setTitleColor(Theme.prefActionbarTitleColor);
         Drawable back = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_back);
-        back.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.MULTIPLY);
+        back.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.MULTIPLY);
         actionBar.setBackButtonDrawable(back);
+        actionBar.setItemsColor(Theme.prefActionbarIconsColor, false);
     }
 
     private void saveName() {
@@ -189,11 +190,10 @@ public class ChangeNameActivity extends BaseFragment {
             return;
         }
         TLRPC.TL_account_updateProfile req = new TLRPC.TL_account_updateProfile();
-        req.flags = 7;//3;
+        req.flags = 3;//7;
         currentUser.first_name = req.first_name = newFirst;
         currentUser.last_name = req.last_name = newLast;
-        //req.about = "Esto es un test desde Plus Messenger";
-        req.about = "This is a test from Plus Messenger";
+        //req.about = "This is a test";
         TLRPC.User user = MessagesController.getInstance().getUser(UserConfig.getClientUserId());
         if (user != null) {
             user.first_name = req.first_name;
@@ -205,8 +205,6 @@ public class ChangeNameActivity extends BaseFragment {
         ConnectionsManager.getInstance().sendRequest(req, new RequestDelegate() {
             @Override
             public void run(TLObject response, TLRPC.TL_error error) {
-                if(response != null) Log.e("saveName","response " + response.toString());
-                if(error != null)Log.e("saveName","error " + error.text);
             }
         });
     }
@@ -224,5 +222,26 @@ public class ChangeNameActivity extends BaseFragment {
 }
             }, 100);
         }
+    }
+
+    @Override
+    public ThemeDescription[] getThemeDescriptions() {
+        return new ThemeDescription[]{
+                new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundWhite),
+
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_ITEMSCOLOR, null, null, null, null, Theme.key_actionBarDefaultIcon),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_TITLECOLOR, null, null, null, null, Theme.key_actionBarDefaultTitle),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SELECTORCOLOR, null, null, null, null, Theme.key_actionBarDefaultSelector),
+
+                new ThemeDescription(firstNameField, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
+                new ThemeDescription(firstNameField, ThemeDescription.FLAG_HINTTEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteHintText),
+                new ThemeDescription(firstNameField, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_windowBackgroundWhiteInputField),
+                new ThemeDescription(firstNameField, ThemeDescription.FLAG_BACKGROUNDFILTER | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, null, null, null, null, Theme.key_windowBackgroundWhiteInputFieldActivated),
+                new ThemeDescription(lastNameField, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
+                new ThemeDescription(lastNameField, ThemeDescription.FLAG_HINTTEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteHintText),
+                new ThemeDescription(lastNameField, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_windowBackgroundWhiteInputField),
+                new ThemeDescription(lastNameField, ThemeDescription.FLAG_BACKGROUNDFILTER | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, null, null, null, null, Theme.key_windowBackgroundWhiteInputFieldActivated),
+        };
     }
 }

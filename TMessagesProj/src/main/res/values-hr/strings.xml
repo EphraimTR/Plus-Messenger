@@ -239,14 +239,13 @@
     <string name="UsernameEmpty">Nije postavljeno</string>
     <string name="ErrorOccurred">Došlo je do greške.</string>
   <!--stickers view-->
-  <string name="Stickers">Naljepnice</string>
+  <string name="StickersName">Naljepnice</string>
   <string name="AddStickers">Dodaj naljepnice</string>
   <string name="AddToStickers">Dodaj u naljepnice</string>
   <string name="AddStickersNotFound">Naljepnice nisu pronađene</string>
   <string name="StickersRemoved">Naljepnice uklonjene</string>
   <string name="AddStickersInstalled">Nove naljepnice su spremljene</string>
   <string name="StickersHide">Sakrij</string>
-  <string name="StickersShow">Prikaži</string>
   <string name="StickersShare">Podijeli</string>
   <string name="StickersCopy">Kopiraj link</string>
   <string name="StickersRemove">Ukloni</string>
@@ -294,7 +293,6 @@
     <string name="Enabled">Omogućeno</string>
     <string name="Disabled">Onemogućeno</string>
     <string name="NotificationsService">Usluga obavijesti</string>
-    <string name="NotificationsServiceDisableInfo">Ako su usluge google play dovoljne za Vas da primate obavijesti, možete onemogućiti uslugu obavijesti. Ipak Vam preporučamo da ostavite omogućeno kako bi aplikacija bila pokrenuta u pozadini i istovremene primala obavijesti.</string>
     <string name="SortBy">Sortiraj po</string>
     <string name="ImportContacts">Uvezi kontakte</string>
     <string name="SortFirstName">Ime</string>
@@ -308,8 +306,7 @@
     <string name="BadgeNumber">Značka s brojem</string>
     <string name="Short">Kratko</string>
     <string name="Long">Dugo</string>
-    <string name="SystemDefault">Osnovne sustavne postavke</string>
-    <string name="SettingsDefault">Osnovne postavke</string>
+
     <string name="AutomaticMediaDownload">Automatsko preuzimanje medija</string>
     <string name="WhenUsingMobileData">Pri korištenju podatkovne veze</string>
     <string name="WhenConnectedOnWiFi">Kad ste spojeni na Wi-Fi</string>
@@ -340,7 +337,6 @@
   <string name="VibrationDefault">Zadano</string>
   <string name="SmartNotifications">Pametne obavijesti</string>
   <string name="SmartNotificationsDisabled">Onemogućeno</string>
-  <string name="SmartNotificationsMinutes">minuta</string>
   <!--sessions view-->
   <string name="SessionsTitle">Aktivne sesije</string>
   <string name="CurrentSession">Trenutna sesija</string>
@@ -387,7 +383,6 @@
     <string name="Of">%1$d od %2$d</string>
     <string name="Gallery">Galerija</string>
     <string name="AllPhotos">Sve slike</string>
-  <string name="AllVideo">Svi video zapisi</string>
     <string name="NoPhotos">Još nema slika</string>
     <string name="PleaseDownload">Molimo te prvo preuzmi medijsku datoteku</string>
     <string name="NoRecentPhotos">Nema nedavnih slika</string>
@@ -477,10 +472,7 @@
     <string name="RemoveFromListText">Dodirni i zadrži prst na korisniku za brisanje.</string>
     <!--edit video view-->
     <string name="EditVideo">Uredi video</string>
-    <string name="OriginalVideo">Originalni video</string>
-    <string name="EditedVideo">Uređeni video</string>
     <string name="SendingVideo">Šaljem video...</string>
-    <string name="CompressVideo">Kompresiraj video</string>
   <!--bot-->
   <string name="BotShare">Podijeli</string>
   <string name="BotInvite">Dodaj u grupu</string>
@@ -577,22 +569,20 @@
     <string name="Page4Title">Sigurno</string>
     <string name="Page5Title">Moćno</string>
     <string name="Page6Title">U oblaku</string>
-    <string name="Page7Title">Privatno</string>
     <string name="Page1Message"><![CDATA[<b>Najbrža</b>]]> aplikacija za dopisivanje.<![CDATA[<br/><b>Besplatna</b>]]> i <![CDATA[<b>sigurna</b>]]>.</string>
     <string name="Page2Message"><![CDATA[<b>Plus Messenger</b>]]> dostavlja poruke brže<![CDATA[<br/>]]>nego bilo koja druga aplikacija.</string>
     <string name="Page3Message"><![CDATA[<b>Plus Messenger</b>]]> će zauvijek biti besplatan.<![CDATA[<br/>]]>Bez oglasa. Bez pretplate.</string>
     <string name="Page4Message"><![CDATA[<b>Plus Messenger</b>]]> čuva vaše poruke<![CDATA[<br/>]]>od hakerskih napada.</string>
     <string name="Page5Message"><![CDATA[<b>Plus Messenger</b>]]> nema ograničenje za veličinu<![CDATA[<br/>]]>medijskih datoteka i dopisivanja.</string>
     <string name="Page6Message"><![CDATA[<b>Plus Messenger</b>]]> vam omogućuje pristup<![CDATA[<br/>]]>porukama s više uređaja.</string>
-    <string name="Page7Message"><![CDATA[<b>Plus Messenger</b>]]> poruke su snažno enkriptirane<![CDATA[<br/>]]>i mogu se same uništiti.</string>
   <string name="StartMessaging">Počni s dopisivanje</string>
     <!--plural-->
-    <string name="Online_zero">%1$d osoba na mreži</string>
-    <string name="Online_one">%1$d osoba na mreži</string>
-    <string name="Online_two">%1$d osobe na mreži</string>
-    <string name="Online_few">%1$d osobe na mreži</string>
-    <string name="Online_many">%1$d osoba na mreži</string>
-    <string name="Online_other">%1$d osoba na mreži</string>
+    <string name="OnlineCount_zero">%1$d osoba na mreži</string>
+    <string name="OnlineCount_one">%1$d osoba na mreži</string>
+    <string name="OnlineCount_two">%1$d osobe na mreži</string>
+    <string name="OnlineCount_few">%1$d osobe na mreži</string>
+    <string name="OnlineCount_many">%1$d osoba na mreži</string>
+    <string name="OnlineCount_other">%1$d osoba na mreži</string>
     <string name="Members_zero">Nema članova.</string>
     <string name="Members_one">%1$d član</string>
     <string name="Members_two">%1$d člana</string>
@@ -749,8 +739,7 @@
     <string name="formatterDay12H">h:mm a</string>
     <string name="formatDateAtTime">%1$s u %2$s</string>
   <!--update text-->
-  <string name="updateBuild">736</string>
-    <!--Telegram+-->
+    <!--Plus-->
   <string name="TelegramForAndroid">Plus Messenger za Android</string>
   <string name="Theming">Izrada teme</string>
   <string name="colorHexInvalid">Neispravan hex kod za boju!</string>

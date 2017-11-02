@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui;
@@ -41,6 +41,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
 
 public class ChangeAboutActivity extends BaseFragment {
@@ -74,7 +75,7 @@ public class ChangeAboutActivity extends BaseFragment {
 
             SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
             Drawable done = getParentActivity().getResources().getDrawable(R.drawable.ic_done);
-            done.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.SRC_IN);
+            done.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.SRC_IN);
             doneButton = menu.addItemWithWidth(done_button, done, AndroidUtilities.dp(56));
 
             TLRPC.User user = MessagesController.getInstance().getUser(UserConfig.getClientUserId());
@@ -95,11 +96,12 @@ public class ChangeAboutActivity extends BaseFragment {
 
         aboutField = new EditText(context);
         aboutField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-        aboutField.setHintTextColor(0xff979797);
-        aboutField.setTextColor(0xff212121);
-        aboutField.setPadding(0, 0, 0, 10);
-        aboutField.getBackground().setColorFilter(AndroidUtilities.getIntColor("themeColor"), PorterDuff.Mode.SRC_IN);
-        aboutField.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+        aboutField.setHintTextColor(/*0xff979797*/Theme.usePlusTheme ? Theme.prefSummaryColor : Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
+        aboutField.setTextColor(/*0xff212121*/Theme.usePlusTheme ? Theme.prefTitleColor : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        aboutField.setPadding(0, 0, 0, AndroidUtilities.dp(8));
+        aboutField.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
+        if(Theme.usePlusTheme)aboutField.getBackground().setColorFilter(Theme.defColor, PorterDuff.Mode.SRC_IN);
+        aboutField.setGravity(Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT));
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("plusconfig", Activity.MODE_PRIVATE);
         boolean showEmojiBtn = preferences.getBoolean("showEmojiKbBtn", false);
         aboutField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_AUTO_CORRECT);
@@ -140,18 +142,16 @@ public class ChangeAboutActivity extends BaseFragment {
             aboutField.requestFocus();
             AndroidUtilities.showKeyboard(aboutField);
         }
-        updateTheme();
+        if(Theme.usePlusTheme)updateTheme();
     }
 
     private void updateTheme(){
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int def = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-        actionBar.setBackgroundColor(themePrefs.getInt("prefHeaderColor", def));
-        actionBar.setTitleColor(themePrefs.getInt("prefHeaderTitleColor", 0xffffffff));
-
+        actionBar.setBackgroundColor(Theme.prefActionbarColor);
+        actionBar.setTitleColor(Theme.prefActionbarTitleColor);
         Drawable back = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_back);
-        back.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.MULTIPLY);
+        back.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.MULTIPLY);
         actionBar.setBackButtonDrawable(back);
+        actionBar.setItemsColor(Theme.prefActionbarIconsColor, false);
     }
 
     private void saveAbout() {
@@ -172,15 +172,15 @@ public class ChangeAboutActivity extends BaseFragment {
             @Override
             public void run(TLObject response, TLRPC.TL_error error) {
                 if(error != null){
-                    Log.e("ChangeNameAbout","error " + error.toString());
+                    //Log.e("ChangeNameAbout","error " + error.toString());
                 }
                 if(response != null){
-                    Log.e("ChangeNameAbout","response " + response.toString());
+                    //Log.e("ChangeNameAbout","response " + response.toString());
                     MessagesController.getInstance().loadFullUser(UserConfig.getCurrentUser(), classGuid, true);
                     AndroidUtilities.runOnUIThread(new Runnable() {
                         @Override
                         public void run() {
-                            NotificationCenter.getInstance().postNotificationName(NotificationCenter.userInfoDidLoaded, UserConfig.getCurrentUser().id);
+                            NotificationCenter.getInstance().postNotificationName(NotificationCenter.userInfoDidLoaded, UserConfig.getCurrentUser().id, null);
                             UserConfig.saveConfig(true);
                         }
                     });

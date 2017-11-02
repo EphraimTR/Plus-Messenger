@@ -244,15 +244,13 @@
   <string name="UsernameEmpty">Нема</string>
   <string name="ErrorOccurred">Дошло је до грешке.</string>
   <!--stickers view-->
-  <string name="Stickers">Налепнице</string>
-  <string name="StickersInfo">Уметници су добродошли да додају своје пакете налепница помоћу нашег @stickers бота.\n\nКорисници могу додавати налепнице тапнувши на њих и \"Додај у налепнице\".</string>
+  <string name="StickersName">Налепнице</string>
   <string name="AddStickers">Додај налепнице</string>
   <string name="AddToStickers">Додај у налепнице</string>
   <string name="AddStickersNotFound">Нема налепница</string>
   <string name="StickersRemoved">Налепнице уклоњене</string>
   <string name="AddStickersInstalled">Нове налепнице додате</string>
   <string name="StickersHide">Сакриј</string>
-  <string name="StickersShow">Прикажи</string>
   <string name="StickersShare">Дели</string>
   <string name="StickersCopy">Копирај везу</string>
   <string name="StickersRemove">Уклони</string>
@@ -301,7 +299,6 @@
   <string name="Enabled">Укључено</string>
   <string name="Disabled">Искључено</string>
   <string name="NotificationsService">Сервис обавештења</string>
-  <string name="NotificationsServiceDisableInfo">Ако су вам Гугл Плеј сервиси довољни да примате обавештења, можете онемогућити Сервис обавештења. Ипак препоручујемо вам да га оставите укљученим како би апликација радила у позадини а ви примали тренутна обавештења.</string>
   <string name="SortBy">Сортирај по</string>
   <string name="ImportContacts">Увези контакте</string>
   <string name="SortFirstName">Име</string>
@@ -315,8 +312,7 @@
   <string name="BadgeNumber">Бројач на беџу</string>
   <string name="Short">кратко</string>
   <string name="Long">дугачко</string>
-  <string name="SystemDefault">Системски</string>
-  <string name="SettingsDefault">Подразумеване поставке</string>
+
   <string name="AutomaticMediaDownload">Аутоматско преузимање медија</string>
   <string name="WhenUsingMobileData">Када користите мобилни интернет</string>
   <string name="WhenConnectedOnWiFi">Када користите бежични интернет</string>
@@ -347,10 +343,7 @@
   <string name="SmartNotifications">Паметна обавештења</string>
   <string name="SmartNotificationsDisabled">искључена</string>
   <string name="SmartNotificationsInfo">Звук највише %1$s за %2$s</string>
-  <string name="SmartNotificationsSoundAtMost">Највише звукова</string>
-  <string name="SmartNotificationsTimes">пута</string>
-  <string name="SmartNotificationsWithin">за</string>
-  <string name="SmartNotificationsMinutes">минута</string>
+
   <!--sessions view-->
   <string name="SessionsTitle">Активне сесије</string>
   <string name="CurrentSession">Тренутне сесије</string>
@@ -400,7 +393,6 @@
   <string name="Of">%1$d од %2$d</string>
   <string name="Gallery">Галерија</string>
   <string name="AllPhotos">Све слике</string>
-  <string name="AllVideo">Сви видео записи</string>
   <string name="NoPhotos">Још нема слика</string>
   <string name="NoVideo">Нема видео записа</string>
   <string name="PleaseDownload">Прво преузмите медија фајл</string>
@@ -521,10 +513,7 @@
   <string name="RemoveFromListText">Додирните и задржите на кориснику да га обришете.</string>
   <!--edit video view-->
   <string name="EditVideo">Измени видео</string>
-  <string name="OriginalVideo">Оригиналан видео</string>
-  <string name="EditedVideo">Измењен видео</string>
   <string name="SendingVideo">Шаљем видео...</string>
-  <string name="CompressVideo">Компресуј видео</string>
   <!--bot-->
   <string name="Bot">бот</string>
   <string name="BotShare">дели</string>
@@ -632,22 +621,20 @@
   <string name="Page4Title">Сигуран</string>
   <string name="Page5Title">Моћан</string>
   <string name="Page6Title">Базиран на облаку</string>
-  <string name="Page7Title">Личан</string>
   <string name="Page1Message">На свету <![CDATA[<b>најбржа</b>]]> апликација за размену порука.<![CDATA[<br/>]]>Она је <![CDATA[<b>бесплатна</b>]]> и <![CDATA[<b>безбедна</b>]]>.</string>
   <string name="Page2Message"><![CDATA[<b>Телеграм</b>]]> испоручује поруке брже од<![CDATA[<br/>]]>било које друге апликације.</string>
   <string name="Page3Message"><![CDATA[<b>Телеграм</b>]]> је заувек бесплатан. Без огласа.<![CDATA[<br/>]]>Без претплате.</string>
   <string name="Page4Message"><![CDATA[<b>Телеграм</b>]]> чува ваше поруке<![CDATA[<br/>]]>од напада хакера.</string>
   <string name="Page5Message"><![CDATA[<b>Телеграм</b>]]> нема ограничење за<![CDATA[<br/>]]>ваше медије и дописивања.</string>
   <string name="Page6Message"><![CDATA[<b>Телеграм</b>]]> вам омогућава приступ порукама<![CDATA[<br/>]]>са више уређаја.</string>
-  <string name="Page7Message"><![CDATA[<b>Телеграм</b>]]> поруке су вишеструко шифроване<![CDATA[<br/>]]>и могу се самоуништити.</string>
   <string name="StartMessaging">Започни дописивање</string>
   <!--plural-->
-  <string name="Online_zero">%1$d на мрежи</string>
-  <string name="Online_one">%1$d на мрежи</string>
-  <string name="Online_two">%1$d на мрежи</string>
-  <string name="Online_few">%1$d на мрежи</string>
-  <string name="Online_many">%1$d на мрежи</string>
-  <string name="Online_other">%1$d на мрежи</string>
+  <string name="OnlineCount_zero">%1$d на мрежи</string>
+  <string name="OnlineCount_one">%1$d на мрежи</string>
+  <string name="OnlineCount_two">%1$d на мрежи</string>
+  <string name="OnlineCount_few">%1$d на мрежи</string>
+  <string name="OnlineCount_many">%1$d на мрежи</string>
+  <string name="OnlineCount_other">%1$d на мрежи</string>
   <string name="Members_zero">нема чланова</string>
   <string name="Members_one">%1$d члан</string>
   <string name="Members_two">%1$d члана</string>
@@ -822,7 +809,7 @@
   <string name="formatterDay24H">HH:mm</string>
   <string name="formatterDay12H">h:mm a</string>
   <string name="formatDateAtTime">%1$s у %2$s</string>
-  <!--Telegram+--><!--
+  <!--Plus--><!--
   <string name="updatePlusText"></string>-->
   <string name="TelegramForAndroid">Плус месенџер за Андроид</string>
   <string name="Theming">Прављење теме</string>

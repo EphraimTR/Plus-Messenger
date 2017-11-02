@@ -3,53 +3,49 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.ui;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.FrameLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
-import org.telegram.ui.Adapters.BaseFragmentAdapter;
-import org.telegram.ui.Cells.TextInfoCell;
-import org.telegram.ui.Cells.UserCell;
+import org.telegram.messenger.support.widget.LinearLayoutManager;
+import org.telegram.messenger.support.widget.RecyclerView;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.TextInfoCell;
+import org.telegram.ui.Cells.UserCell;
+import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.RecyclerListView;
 
 public class BlockedUsersActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, ContactsActivity.ContactsActivityDelegate {
 
-    private ListView listView;
+    private RecyclerListView listView;
     private ListAdapter listViewAdapter;
-    private FrameLayout progressView;
-    private TextView emptyTextView;
+    private EmptyTextProgressView emptyView;
     private int selectedUserId;
-
 
     private final static int block_user = 1;
 
@@ -96,63 +92,43 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
 
         SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
         Drawable plus = getParentActivity().getResources().getDrawable(R.drawable.plus);
-        plus.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.SRC_IN);
+        plus.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.SRC_IN);
         menu.addItem(block_user, plus);
 
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
-        emptyTextView = new TextView(context);
-        emptyTextView.setTextColor(0xff808080);
-        emptyTextView.setTextSize(20);
-        emptyTextView.setGravity(Gravity.CENTER);
-        emptyTextView.setVisibility(View.INVISIBLE);
-        emptyTextView.setText(LocaleController.getString("NoBlocked", R.string.NoBlocked));
-        frameLayout.addView(emptyTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT));
-        emptyTextView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return true;
-            }
-        });
+        emptyView = new EmptyTextProgressView(context);
+        emptyView.setText(LocaleController.getString("NoBlocked", R.string.NoBlocked));
+        frameLayout.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        progressView = new FrameLayout(context);
-        frameLayout.addView(progressView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
-        ProgressBar progressBar = new ProgressBar(context);
-        progressView.addView(progressBar, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
-
-        listView = new ListView(context);
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        listView.setBackgroundColor(preferences.getInt("prefBGColor", 0xffffffff));
-        listView.setEmptyView(emptyTextView);
+        listView = new RecyclerListView(context);
+        listView.setEmptyView(emptyView);
+        listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setVerticalScrollBarEnabled(false);
-        listView.setDivider(null);
-        listView.setDividerHeight(0);
         listView.setAdapter(listViewAdapter = new ListAdapter(context));
-        if (Build.VERSION.SDK_INT >= 11) {
-            listView.setVerticalScrollbarPosition(LocaleController.isRTL ? ListView.SCROLLBAR_POSITION_LEFT : ListView.SCROLLBAR_POSITION_RIGHT);
-        }
+        listView.setVerticalScrollbarPosition(LocaleController.isRTL ? RecyclerListView.SCROLLBAR_POSITION_LEFT : RecyclerListView.SCROLLBAR_POSITION_RIGHT);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new RecyclerListView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (i < MessagesController.getInstance().blockedUsers.size()) {
+            public void onItemClick(View view, int position) {
+                if (position >= MessagesController.getInstance().blockedUsers.size()) {
+                    return;
+                }
                     Bundle args = new Bundle();
-                    args.putInt("user_id", MessagesController.getInstance().blockedUsers.get(i));
+                args.putInt("user_id", MessagesController.getInstance().blockedUsers.get(position));
                     presentFragment(new ProfileActivity(args));
                 }
-            }
         });
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        listView.setOnItemLongClickListener(new RecyclerListView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (i < 0 || i >= MessagesController.getInstance().blockedUsers.size() || getParentActivity() == null) {
+            public boolean onItemClick(View view, int position) {
+                if (position >= MessagesController.getInstance().blockedUsers.size() || getParentActivity() == null) {
                     return true;
                 }
-                selectedUserId = MessagesController.getInstance().blockedUsers.get(i);
+                selectedUserId = MessagesController.getInstance().blockedUsers.get(position);
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 CharSequence[] items = new CharSequence[]{LocaleController.getString("Unblock", R.string.Unblock)};
@@ -171,12 +147,9 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
         });
 
         if (MessagesController.getInstance().loadingBlockedUsers) {
-            progressView.setVisibility(View.VISIBLE);
-            emptyTextView.setVisibility(View.GONE);
-            listView.setEmptyView(null);
+            emptyView.showProgress();
         } else {
-            progressView.setVisibility(View.GONE);
-            listView.setEmptyView(emptyTextView);
+            emptyView.showTextView();
         }
         return fragmentView;
     }
@@ -184,17 +157,12 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
     @Override
     public void didReceivedNotification(int id, Object... args) {
         if (id == NotificationCenter.updateInterfaces) {
-            int mask = (Integer)args[0];
+            int mask = (Integer) args[0];
             if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0 || (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
                 updateVisibleRows(mask);
             }
         } else if (id == NotificationCenter.blockedUsersDidLoaded) {
-            if (progressView != null) {
-                progressView.setVisibility(View.GONE);
-            }
-            if (listView != null && listView.getEmptyView() == null) {
-                listView.setEmptyView(emptyTextView);
-            }
+            emptyView.showTextView();
             if (listViewAdapter != null) {
                 listViewAdapter.notifyDataSetChanged();
             }
@@ -220,29 +188,28 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
         if (listViewAdapter != null) {
             listViewAdapter.notifyDataSetChanged();
         }
-        updateTheme();
+        if(Theme.usePlusTheme)updateTheme();
     }
 
     private void updateTheme(){
-        SharedPreferences themePrefs = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-        int def = themePrefs.getInt("themeColor", AndroidUtilities.defColor);
-        actionBar.setBackgroundColor(themePrefs.getInt("prefHeaderColor", def));
-        actionBar.setTitleColor(themePrefs.getInt("prefHeaderTitleColor", 0xffffffff));
-
+        actionBar.setBackgroundColor(Theme.prefActionbarColor);
+        actionBar.setTitleColor(Theme.prefActionbarTitleColor);
         Drawable back = getParentActivity().getResources().getDrawable(R.drawable.ic_ab_back);
-        back.setColorFilter(themePrefs.getInt("prefHeaderIconsColor", 0xffffffff), PorterDuff.Mode.MULTIPLY);
+        back.setColorFilter(Theme.prefActionbarIconsColor, PorterDuff.Mode.MULTIPLY);
         actionBar.setBackButtonDrawable(back);
+        actionBar.setItemsColor(Theme.prefActionbarIconsColor, false);
     }
 
     @Override
-    public void didSelectContact(final TLRPC.User user, String param) {
+    public void didSelectContact(final TLRPC.User user, String param, ContactsActivity activity) {
         if (user == null) {
             return;
         }
         MessagesController.getInstance().blockUser(user.id);
     }
 
-    private class ListAdapter extends BaseFragmentAdapter {
+    private class ListAdapter extends RecyclerListView.SelectionAdapter {
+
         private Context mContext;
 
         public ListAdapter(Context context) {
@@ -250,17 +217,7 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
         }
 
         @Override
-        public boolean areAllItemsEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isEnabled(int i) {
-            return i != MessagesController.getInstance().blockedUsers.size();
-        }
-
-        @Override
-        public int getCount() {
+        public int getItemCount() {
             if (MessagesController.getInstance().blockedUsers.isEmpty()) {
                 return 0;
             }
@@ -268,32 +225,30 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
         }
 
         @Override
-        public Object getItem(int i) {
-            return null;
+        public boolean isEnabled(RecyclerView.ViewHolder holder) {
+            return holder.getItemViewType() == 0;
         }
 
         @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return false;
-        }
-
-        @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
-            int type = getItemViewType(i);
-            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
-            if (type == 0) {
-                if (view == null) {
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view;
+            switch (viewType) {
+                case 0:
                     view = new UserCell(mContext, 1, 0, false);
-                    view.setTag("Pref");
-                }
-                ((UserCell) view).setNameColor(preferences.getInt("prefTitleColor", 0xff212121));
-                ((UserCell) view).setStatusColor(preferences.getInt("prefSummaryColor", 0xff8a8a8a));
-                TLRPC.User user = MessagesController.getInstance().getUser(MessagesController.getInstance().blockedUsers.get(i));
+                    break;
+                case 1:
+                default:
+                    view = new TextInfoCell(mContext);
+                    ((TextInfoCell) view).setText(LocaleController.getString("UnblockText", R.string.UnblockText));
+                    break;
+            }
+            return new RecyclerListView.Holder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            if (holder.getItemViewType() == 0) {
+                TLRPC.User user = MessagesController.getInstance().getUser(MessagesController.getInstance().blockedUsers.get(position));
                 if (user != null) {
                     String number;
                     if (user.bot) {
@@ -303,34 +258,65 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
                     } else {
                         number = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);
                     }
-                    ((UserCell) view).setData(user, null, number, 0);
-                }
-            } else if (type == 1) {
-                if (view == null) {
-                    view = new TextInfoCell(mContext);
-                    ((TextInfoCell) view).setText(LocaleController.getString("UnblockText", R.string.UnblockText));
-                    ((TextInfoCell) view).setTextColor(preferences.getInt("prefSummaryColor", 0xff8a8a8a));
+                    ((UserCell) holder.itemView).setData(user, null, number, 0);
+                    holder.itemView.setTag("Pref");
+                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences(AndroidUtilities.THEME_PREFS, AndroidUtilities.THEME_PREFS_MODE);
+                    ((UserCell) holder.itemView).setNameColor(preferences.getInt("prefTitleColor", 0xff212121));
+                    ((UserCell) holder.itemView).setStatusColor(preferences.getInt("prefSummaryColor", 0xff8a8a8a));
                 }
             }
-            return view;
         }
 
         @Override
         public int getItemViewType(int i) {
-            if(i == MessagesController.getInstance().blockedUsers.size()) {
+            if (i == MessagesController.getInstance().blockedUsers.size()) {
                 return 1;
             }
             return 0;
         }
+    }
 
-        @Override
-        public int getViewTypeCount() {
-            return 2;
-        }
+    @Override
+    public ThemeDescription[] getThemeDescriptions() {
+        ThemeDescription.ThemeDescriptionDelegate cellDelegate = new ThemeDescription.ThemeDescriptionDelegate() {
+            @Override
+            public void didSetColor(int color) {
+                int count = listView.getChildCount();
+                for (int a = 0; a < count; a++) {
+                    View child = listView.getChildAt(a);
+                    if (child instanceof UserCell) {
+                        ((UserCell) child).update(0);
+                    }
+                }
+            }
+        };
 
-        @Override
-        public boolean isEmpty() {
-            return MessagesController.getInstance().blockedUsers.isEmpty();
-        }
+        return new ThemeDescription[]{
+                new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundWhite),
+
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault),
+                new ThemeDescription(listView, ThemeDescription.FLAG_LISTGLOWCOLOR, null, null, null, null, Theme.key_actionBarDefault),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_ITEMSCOLOR, null, null, null, null, Theme.key_actionBarDefaultIcon),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_TITLECOLOR, null, null, null, null, Theme.key_actionBarDefaultTitle),
+                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SELECTORCOLOR, null, null, null, null, Theme.key_actionBarDefaultSelector),
+
+                new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector),
+
+                new ThemeDescription(emptyView, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_emptyListPlaceholder),
+                new ThemeDescription(emptyView, ThemeDescription.FLAG_PROGRESSBAR, null, null, null, null, Theme.key_progressCircle),
+
+                new ThemeDescription(listView, 0, new Class[]{TextInfoCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText5),
+                new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
+                new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"statusColor"}, null, null, cellDelegate, Theme.key_windowBackgroundWhiteGrayText),
+
+                new ThemeDescription(listView, 0, new Class[]{UserCell.class}, null, new Drawable[]{Theme.avatar_photoDrawable, Theme.avatar_broadcastDrawable}, null, Theme.key_avatar_text),
+                new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundRed),
+                new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundOrange),
+                new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundViolet),
+                new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundGreen),
+                new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundCyan),
+                new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundBlue),
+                new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundPink),
+        };
     }
 }

@@ -21,6 +21,11 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 
+import static org.telegram.ui.ActionBar.Theme.bubblesNamesArray;
+import static org.telegram.ui.ActionBar.Theme.checkid;
+import static org.telegram.ui.ActionBar.Theme.checksNamesArray;
+import static org.telegram.ui.ActionBar.Theme.imgid;
+
 public class ImageListActivity extends BaseFragment {
 
     private int arrayId;
@@ -43,133 +48,13 @@ public class ImageListActivity extends BaseFragment {
     //private ListView list;
     private CustomListAdapter listAdapter;
 
-    private static String[] bubblesNamesArray ={
-            "Telegram",
-            "Lex",
-            "Hangouts",
-            "Notepad",
-            "Ed",
-            "Edge",
-            "iOS",
-            "Telegram_old"
-    };
-
-    Integer[] imgid ={
-            R.drawable.msg_in,
-            R.drawable.msg_in_2,
-            R.drawable.msg_in_3,
-            R.drawable.msg_in_4,
-            R.drawable.msg_in_5,
-            R.drawable.msg_in_6,
-            R.drawable.msg_in_7,
-            R.drawable.msg_in_8,
-            R.drawable.msg_out,
-            R.drawable.msg_out_2,
-            R.drawable.msg_out_3,
-            R.drawable.msg_out_4,
-            R.drawable.msg_out_5,
-            R.drawable.msg_out_6,
-            R.drawable.msg_out_7,
-            R.drawable.msg_out_8
-    };
-
-    private static String[] checksNamesArray ={
-            "Stock",
-            "EdCheck",
-            "Lex",
-            "Gladiator",
-            "MaxChecks",
-            "ElipLex",
-            "CubeLex",
-            "MaxLines",
-            "RLex",
-            "MaxLinesPro",
-            "ReadLex",
-            "MaxHeart"
-    };
-
-    Integer[] checkid ={
-            R.drawable.dialogs_check,
-            R.drawable.dialogs_check_2,
-            R.drawable.dialogs_check_3,
-            R.drawable.dialogs_check_4,
-            R.drawable.dialogs_check_5,
-            R.drawable.dialogs_check_6,
-            R.drawable.dialogs_check_7,
-            R.drawable.dialogs_check_8,
-            R.drawable.dialogs_check_9,
-            R.drawable.dialogs_check_10,
-            R.drawable.dialogs_check_11,
-            R.drawable.dialogs_check_12,
-            R.drawable.dialogs_halfcheck,
-            R.drawable.dialogs_halfcheck_2,
-            R.drawable.dialogs_halfcheck_3,
-            R.drawable.dialogs_halfcheck_4,
-            R.drawable.dialogs_halfcheck_5,
-            R.drawable.dialogs_halfcheck_6,
-            R.drawable.dialogs_halfcheck_7,
-            R.drawable.dialogs_halfcheck_8,
-            R.drawable.dialogs_halfcheck_9,
-            R.drawable.dialogs_halfcheck_10,
-            R.drawable.dialogs_halfcheck_11,
-            R.drawable.dialogs_halfcheck_12,
-            R.drawable.msg_check,
-            R.drawable.msg_check_2,
-            R.drawable.msg_check_3,
-            R.drawable.msg_check_4,
-            R.drawable.msg_check_5,
-            R.drawable.msg_check_6,
-            R.drawable.msg_check_7,
-            R.drawable.msg_check_8,
-            R.drawable.msg_check_9,
-            R.drawable.msg_check_10,
-            R.drawable.msg_check_11,
-            R.drawable.msg_check_12,
-            R.drawable.msg_halfcheck,
-            R.drawable.msg_halfcheck_2,
-            R.drawable.msg_halfcheck_3,
-            R.drawable.msg_halfcheck_4,
-            R.drawable.msg_halfcheck_5,
-            R.drawable.msg_halfcheck_6,
-            R.drawable.msg_halfcheck_7,
-            R.drawable.msg_halfcheck_8,
-            R.drawable.msg_halfcheck_9,
-            R.drawable.msg_halfcheck_10,
-            R.drawable.msg_halfcheck_11,
-            R.drawable.msg_halfcheck_12,
-            R.drawable.msg_check_w,
-            R.drawable.msg_check_w_2,
-            R.drawable.msg_check_w_3,
-            R.drawable.msg_check_w_4,
-            R.drawable.msg_check_w_5,
-            R.drawable.msg_check_w_6,
-            R.drawable.msg_check_w_7,
-            R.drawable.msg_check_w_8,
-            R.drawable.msg_check_w_9,
-            R.drawable.msg_check_w_10,
-            R.drawable.msg_check_w_11,
-            R.drawable.msg_check_w_12,
-            R.drawable.msg_halfcheck_w,
-            R.drawable.msg_halfcheck_w_2,
-            R.drawable.msg_halfcheck_w_3,
-            R.drawable.msg_halfcheck_w_4,
-            R.drawable.msg_halfcheck_w_5,
-            R.drawable.msg_halfcheck_w_6,
-            R.drawable.msg_halfcheck_w_7,
-            R.drawable.msg_halfcheck_w_8,
-            R.drawable.msg_halfcheck_w_9,
-            R.drawable.msg_halfcheck_w_10,
-            R.drawable.msg_halfcheck_w_11,
-            R.drawable.msg_halfcheck_w_12
-    };
-
-    public static String getBubbleName(int i){
-        return bubblesNamesArray[i];
+    /*public static String getBubbleName(int i){
+        return Theme.bubblesNamesArray[i];
     }
 
     public static String getCheckName(int i){
-        return checksNamesArray[i];
-    }
+        return Theme.checksNamesArray[i];
+    }*/
 
     @Override
     public View createView(Context context){
@@ -187,7 +72,7 @@ public class ImageListActivity extends BaseFragment {
 
         fragmentView = getParentActivity().getLayoutInflater().inflate(R.layout.imagelistlayout, null, false);
 
-        listAdapter = new CustomListAdapter(context, arrayId == 0 ? bubblesNamesArray : checksNamesArray, arrayId == 0 ? imgid : checkid);
+        listAdapter = new CustomListAdapter(context, arrayId == 0 ? bubblesNamesArray : checksNamesArray, arrayId == 0 ? Theme.imgid : Theme.checkid);
         ListView list = (ListView) fragmentView.findViewById(R.id.list);
         list.setAdapter(listAdapter);
         list.setDivider(null);
@@ -210,6 +95,8 @@ public class ImageListActivity extends BaseFragment {
                     } else{
                         Theme.setChecks(getParentActivity());
                     }
+                    Theme.applyChatTheme(false);
+                    Theme.applyDialogsTheme();
                 }
                 listAdapter.notifyDataSetChanged();
                 finishFragment();
@@ -260,6 +147,12 @@ public class ImageListActivity extends BaseFragment {
                 //outImageView.getLayoutParams().height = 70;
                 outImageView.getLayoutParams().width = 70;
                 outImageView.setColorFilter(0, PorterDuff.Mode.SRC_ATOP);
+
+                inImageView.setColorFilter(Theme.chatChecksColor, PorterDuff.Mode.SRC_IN);
+                outImageView.setColorFilter(Theme.chatChecksColor, PorterDuff.Mode.SRC_IN);
+            } else{
+                inImageView.setColorFilter(Theme.chatLBubbleColor, PorterDuff.Mode.SRC_IN);
+                outImageView.setColorFilter(Theme.chatRBubbleColor, PorterDuff.Mode.SRC_IN);
             }
 
             return view;
